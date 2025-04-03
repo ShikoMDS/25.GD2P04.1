@@ -14,6 +14,8 @@ Mail : ayoub.ahmad@mds.ac.nz
 
 #include "Mesh.h"
 
+#include <iostream>
+
 Mesh::Mesh(std::vector<Vertex> Vertices, std::vector<unsigned int> Indices, std::vector<Texture> Textures)
 	: Vertices(std::move(Vertices)), Indices(std::move(Indices)), Textures(std::move(Textures))
 {
@@ -36,6 +38,11 @@ void Mesh::draw(const Shader& Shader) const
 
 		Shader.setInt(Name + Number, I);
 		glBindTexture(GL_TEXTURE_2D, Textures[I].Id);
+
+		if (Textures[I].Id == 0) {
+			std::cout << "Warning: texture " << Textures[I].Path << " failed to load." << std::endl;
+		}
+
 	}
 
 	glBindVertexArray(MVao);
@@ -43,6 +50,7 @@ void Mesh::draw(const Shader& Shader) const
 	glBindVertexArray(0);
 
 	glActiveTexture(GL_TEXTURE0);
+
 }
 
 void Mesh::cleanup() {

@@ -49,23 +49,24 @@ void Scene1::render() {
     // 1) Clear color, depth, and stencil buffers
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    // Make sure face culling and depth testing are enabled
-    glEnable(GL_DEPTH_TEST);
     glCullFace(GL_BACK);
 
     // ----------------------------------------------------------------
     // (A) Render the entire scene normally (colored pass)
     // ----------------------------------------------------------------
-
     LightingShader.use();
+    //LightingShader.setInt("diffuseMap", 0);
     LightingShader.setMat4("view", GCamera.getViewMatrix());
     LightingShader.setMat4("projection", GCamera.getProjectionMatrix(800, 600));
     LightingShader.setVec3("viewPos", GCamera.VPosition);
     LightingShader.setMaterial(material);
     LightingShader.setBool("useTexture", true);
 
-    // Example global translation for your scene
+    // Make sure texture unit 0 is active
+    glActiveTexture(GL_TEXTURE0);
+    // (Assume your Model class's draw() method binds the model's diffuse texture to unit 0)
+
+    // Global translation for the scene (move 15 units along +Z)
     glm::mat4 globalTranslation = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 15.0f));
     glm::mat4 modelMatrix(1.0f);
 
@@ -77,6 +78,8 @@ void Scene1::render() {
             modelMatrix = glm::scale(modelMatrix, glm::vec3(PlantScaleFactor));
             modelMatrix = globalTranslation * modelMatrix;
             LightingShader.setMat4("model", modelMatrix);
+            // Ensure texture unit is active before drawing
+            glActiveTexture(GL_TEXTURE0);
             GardenPlant.draw(LightingShader);
         }
     }
@@ -92,6 +95,7 @@ void Scene1::render() {
         modelMatrix = glm::scale(modelMatrix, glm::vec3(ModelScaleFactor));
         modelMatrix = globalTranslation * modelMatrix;
         LightingShader.setMat4("model", modelMatrix);
+        glActiveTexture(GL_TEXTURE0);
         Tree.draw(LightingShader);
     }
 
@@ -101,7 +105,10 @@ void Scene1::render() {
     modelMatrix = glm::scale(modelMatrix, glm::vec3(ModelScaleFactor));
     modelMatrix = globalTranslation * modelMatrix;
     LightingShader.setMat4("model", modelMatrix);
+    glActiveTexture(GL_TEXTURE0);
     Statue.draw(LightingShader);
+     
+    GLightManager.updateLighting(LightingShader);
 
     // Render Skybox
     LSkybox.render(SkyboxShader, GCamera, 800, 600);
@@ -109,31 +116,26 @@ void Scene1::render() {
     // ----------------------------------------------------------------
     // (B) Stencil Update Pass: Write statue silhouette to stencil buffer
     // ----------------------------------------------------------------
-
-    // Enable stencil test and clear stencil buffer
     glEnable(GL_STENCIL_TEST);
     glClear(GL_STENCIL_BUFFER_BIT);
-    // We want to write '1' into the stencil buffer wherever the statue is drawn
     glStencilMask(0xFF);
 
-    // Disable color writes and depth writes, and disable depth test so all fragments pass
+    // Disable color and depth writes, and disable depth test so all fragments are written
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
     glDepthMask(GL_FALSE);
     glDisable(GL_DEPTH_TEST);
 
-    // **IMPORTANT**: Set the stencil operation to REPLACE so we actually write '1'
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-    // Always pass and write 1
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
 
-    // Use the same transforms for the statue
+    // Use the same transforms so the stencil exactly matches the statue
     LightingShader.use();
     LightingShader.setMat4("view", GCamera.getViewMatrix());
     LightingShader.setMat4("projection", GCamera.getProjectionMatrix(800, 600));
     LightingShader.setMat4("model", modelMatrix);
     Statue.draw(LightingShader);
 
-    // Restore color/depth writes and re-enable depth test
+    // Restore color and depth writes, and re-enable depth test
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
@@ -141,29 +143,23 @@ void Scene1::render() {
     // ----------------------------------------------------------------
     // (C) Outline Pass: Draw a blue outline where stencil != 1
     // ----------------------------------------------------------------
-
-    // Only draw where stencil is NOT equal to 1
     glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-    glStencilMask(0x00);  // No writing to stencil now
-    // Force the outline to appear on top by ignoring depth test
+    glStencilMask(0x00);
     glDepthMask(GL_FALSE);
     glDepthFunc(GL_ALWAYS);
 
     OutlineShader.use();
     OutlineShader.setMat4("view", GCamera.getViewMatrix());
     OutlineShader.setMat4("projection", GCamera.getProjectionMatrix(800, 600));
-
-    // Slightly scale up the statue
+    // Scale up the model matrix slightly for the outline effect
     glm::mat4 outlineMatrix = glm::scale(modelMatrix, glm::vec3(1.03f));
     OutlineShader.setMat4("model", outlineMatrix);
-    // Set the outline color to blue
     OutlineShader.setVec3("outlineColor", glm::vec3(0.0f, 0.0f, 1.0f));
     Statue.draw(OutlineShader);
 
     // ----------------------------------------------------------------
     // (D) Reset State
     // ----------------------------------------------------------------
-
     glDepthFunc(GL_LESS);
     glDepthMask(GL_TRUE);
     glStencilMask(0xFF);

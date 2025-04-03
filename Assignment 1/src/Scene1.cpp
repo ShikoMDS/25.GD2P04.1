@@ -46,52 +46,52 @@ void Scene1::update(float deltaTime) {
 }
 
 void Scene1::render() {
-    // 1) Clear color, depth, and stencil buffers
+    // Clear all buffers
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glCullFace(GL_BACK);
 
-    // ----------------------------------------------------------------
-    // (A) Render the entire scene normally (colored pass)
-    // ----------------------------------------------------------------
+    // Global translation for the scene
+    glm::mat4 globalTranslation = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 15.0f));
+
+    // PASS 1: Draw Skybox first
+    // ----------------------------------
+    glDisable(GL_STENCIL_TEST);  // Ensure stencil test is disabled for skybox
+    // Render Skybox
+    LSkybox.render(SkyboxShader, GCamera, 800, 600);
+
+    // PASS 2: Draw the normal scene
+    // ----------------------------------
     LightingShader.use();
-    //LightingShader.setInt("diffuseMap", 0);
     LightingShader.setMat4("view", GCamera.getViewMatrix());
     LightingShader.setMat4("projection", GCamera.getProjectionMatrix(800, 600));
     LightingShader.setVec3("viewPos", GCamera.VPosition);
     LightingShader.setMaterial(material);
     LightingShader.setBool("useTexture", true);
+    GLightManager.updateLighting(LightingShader);
 
-    // Make sure texture unit 0 is active
-    glActiveTexture(GL_TEXTURE0);
-    // (Assume your Model class's draw() method binds the model's diffuse texture to unit 0)
-
-    // Global translation for the scene (move 15 units along +Z)
-    glm::mat4 globalTranslation = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 15.0f));
-    glm::mat4 modelMatrix(1.0f);
-
-    // Render Garden Plants
+    // Render garden plants
     for (int X = -5; X <= 5; X++) {
         for (int Z = -5; Z <= 5; Z++) {
-            modelMatrix = glm::mat4(1.0f);
+            glm::mat4 modelMatrix = glm::mat4(1.0f);
             modelMatrix = glm::translate(modelMatrix, glm::vec3(X, 0.0f, Z * 0.8f));
             modelMatrix = glm::scale(modelMatrix, glm::vec3(PlantScaleFactor));
             modelMatrix = globalTranslation * modelMatrix;
             LightingShader.setMat4("model", modelMatrix);
-            // Ensure texture unit is active before drawing
             glActiveTexture(GL_TEXTURE0);
             GardenPlant.draw(LightingShader);
         }
     }
 
-    // Render Trees
+    // Render Trees (except the one we'll outline)
     glm::vec3 treePositions[] = {
         {-6.0f, 0.0f, -5.0f}, { 6.0f, 0.0f, -5.0f},
         {-6.0f, 0.0f,  5.0f}, { 6.0f, 0.0f,  5.0f}
     };
-    for (auto& pos : treePositions) {
-        modelMatrix = glm::mat4(1.0f);
-        modelMatrix = glm::translate(modelMatrix, pos);
+
+    // Draw all trees except the first one (which we'll outline)
+    for (int i = 1; i < 4; i++) {
+        glm::mat4 modelMatrix = glm::mat4(1.0f);
+        modelMatrix = glm::translate(modelMatrix, treePositions[i]);
         modelMatrix = glm::scale(modelMatrix, glm::vec3(ModelScaleFactor));
         modelMatrix = globalTranslation * modelMatrix;
         LightingShader.setMat4("model", modelMatrix);
@@ -99,71 +99,63 @@ void Scene1::render() {
         Tree.draw(LightingShader);
     }
 
-    // Render Statue (colored)
-    modelMatrix = glm::mat4(1.0f);
+    // PASS 3: Stencil Pass - fill stencil buffer with objects to outline
+    // ----------------------------------
+    glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);  // Always pass stencil test, write 1
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);  // Replace stencil value on depth pass
+    glStencilMask(0xFF);  // Enable writing to stencil buffer
+    glDepthMask(GL_TRUE);  // Keep writing to depth buffer
+    glClear(GL_STENCIL_BUFFER_BIT);  // Clear stencil to 0
+
+    // Draw statue to stencil buffer AND color buffer
+    LightingShader.use();
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
     modelMatrix = glm::rotate(modelMatrix, glm::radians(mStatueRotation), glm::vec3(0.0f, 1.0f, 0.0f));
     modelMatrix = glm::scale(modelMatrix, glm::vec3(ModelScaleFactor));
     modelMatrix = globalTranslation * modelMatrix;
     LightingShader.setMat4("model", modelMatrix);
-    glActiveTexture(GL_TEXTURE0);
     Statue.draw(LightingShader);
-     
-    GLightManager.updateLighting(LightingShader);
 
-    // Render Skybox
-    LSkybox.render(SkyboxShader, GCamera, 800, 600);
-
-    // ----------------------------------------------------------------
-    // (B) Stencil Update Pass: Write statue silhouette to stencil buffer
-    // ----------------------------------------------------------------
-    glEnable(GL_STENCIL_TEST);
-    glClear(GL_STENCIL_BUFFER_BIT);
-    glStencilMask(0xFF);
-
-    // Disable color and depth writes, and disable depth test so all fragments are written
-    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-    glDepthMask(GL_FALSE);
-    glDisable(GL_DEPTH_TEST);
-
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-
-    // Use the same transforms so the stencil exactly matches the statue
-    LightingShader.use();
-    LightingShader.setMat4("view", GCamera.getViewMatrix());
-    LightingShader.setMat4("projection", GCamera.getProjectionMatrix(800, 600));
+    // Draw the first tree to stencil buffer AND color buffer
+    modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::translate(modelMatrix, treePositions[0]);
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(ModelScaleFactor));
+    modelMatrix = globalTranslation * modelMatrix;
     LightingShader.setMat4("model", modelMatrix);
-    Statue.draw(LightingShader);
+    Tree.draw(LightingShader);
 
-    // Restore color and depth writes, and re-enable depth test
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glDepthMask(GL_TRUE);
-    glEnable(GL_DEPTH_TEST);
-
-    // ----------------------------------------------------------------
-    // (C) Outline Pass: Draw a blue outline where stencil != 1
-    // ----------------------------------------------------------------
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-    glStencilMask(0x00);
-    glDepthMask(GL_FALSE);
-    glDepthFunc(GL_ALWAYS);
+    // PASS 4: Draw outlines
+    // ----------------------------------
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);  // Only draw where stencil is NOT 1
+    glStencilMask(0x00);  // Disable writing to stencil buffer
+    glDepthFunc(GL_LEQUAL);  // Less or equal depth test (for outlines to appear on edges)
 
     OutlineShader.use();
     OutlineShader.setMat4("view", GCamera.getViewMatrix());
     OutlineShader.setMat4("projection", GCamera.getProjectionMatrix(800, 600));
-    // Scale up the model matrix slightly for the outline effect
-    glm::mat4 outlineMatrix = glm::scale(modelMatrix, glm::vec3(1.03f));
-    OutlineShader.setMat4("model", outlineMatrix);
     OutlineShader.setVec3("outlineColor", glm::vec3(0.0f, 0.0f, 1.0f));
+
+    // Draw statue outline
+    modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(mStatueRotation), glm::vec3(0.0f, 1.0f, 0.0f));
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(ModelScaleFactor * 1.05f));  // Slightly larger
+    modelMatrix = globalTranslation * modelMatrix;
+    OutlineShader.setMat4("model", modelMatrix);
     Statue.draw(OutlineShader);
 
-    // ----------------------------------------------------------------
-    // (D) Reset State
-    // ----------------------------------------------------------------
-    glDepthFunc(GL_LESS);
-    glDepthMask(GL_TRUE);
-    glStencilMask(0xFF);
-    glDisable(GL_STENCIL_TEST);
+    // Draw tree outline
+    modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::translate(modelMatrix, treePositions[0]);
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(ModelScaleFactor * 1.05f));  // Slightly larger
+    modelMatrix = globalTranslation * modelMatrix;
+    OutlineShader.setMat4("model", modelMatrix);
+    Tree.draw(OutlineShader);
+
+    // Reset state
+    glDepthFunc(GL_LESS);  // Reset to default depth function
+    glStencilMask(0xFF);   // Reset stencil mask
+    glDisable(GL_STENCIL_TEST);  // Disable stencil testing
 }
 
 void Scene1::cleanup() {

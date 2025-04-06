@@ -7,13 +7,17 @@
 
 // Constructor for Terrain, takes in HeightMapInfo
 Terrain::Terrain(const HeightMapInfo& info) : terrainInfo(info) {
+    std::cout << "Initializing terrain from heightmap: " << info.FilePath << std::endl;
     LoadHeightMap();  // Load the heightmap data
-    SmoothHeights();  // Apply smoothing
-    SmoothHeights();  // Apply multiple times
-    SmoothHeights();
-    SmoothHeights();
-    SmoothHeights();
+    
+    // Apply smoothing multiple times for better results
+    std::cout << "Smoothing heightmap data..." << std::endl;
+    for (int i = 0; i < 5; i++) {
+        SmoothHeights();
+    }
+    
     SetupTerrain();   // Set up the terrain mesh
+    std::cout << "Terrain initialization complete" << std::endl;
 }
 
 // Destructor for Terrain, cleans up buffers
@@ -25,10 +29,8 @@ Terrain::~Terrain() {
 
 // Function to load heightmap from a raw file
 void Terrain::LoadHeightMap() {
-    terrainInfo.Width = 512;  // Set the terrain width to match heightmap resolution
-    terrainInfo.Depth = 512;  // Set the terrain depth to match heightmap resolution
-
     unsigned int VertexCount = terrainInfo.Width * terrainInfo.Depth;
+    std::cout << "Loading heightmap with dimensions: " << terrainInfo.Width << "x" << terrainInfo.Depth << std::endl;
 
     // Temporary vector to hold raw byte data
     std::vector<unsigned char> HeightValue(VertexCount);
@@ -38,9 +40,14 @@ void Terrain::LoadHeightMap() {
     if (file) {
         file.read(reinterpret_cast<char*>(&HeightValue[0]), static_cast<std::streamsize>(HeightValue.size()));
         file.close();
+        std::cout << "Heightmap file loaded successfully" << std::endl;
     }
     else {
         std::cerr << "Error: Could not load heightmap file: " << terrainInfo.FilePath << std::endl;
+        // Initialize with default heightmap if file loading fails
+        for (unsigned int i = 0; i < VertexCount; i++) {
+            HeightValue[i] = 0;
+        }
         return;
     }
 
@@ -67,20 +74,24 @@ void Terrain::SmoothHeights() {
 // Helper function to calculate the average height of neighboring vertices
 float Terrain::Average(unsigned int row, unsigned int col) {
     float sum = 0.0f;
-    int count = 0;
+    float totalWeight = 0.0f;
 
-    for (int i = -1; i <= 1; i++) {
-        for (int j = -1; j <= 1; j++) {
+    // Use a larger kernel for better smoothing (5x5)
+    for (int i = -2; i <= 2; i++) {
+        for (int j = -2; j <= 2; j++) {
             int newRow = row + i;
             int newCol = col + j;
 
             if (newRow >= 0 && newRow < (int)terrainInfo.Width && newCol >= 0 && newCol < (int)terrainInfo.Depth) {
-                sum += heightmap[newRow * terrainInfo.Depth + newCol];
-                count++;
+                // Weight samples based on distance for more natural smoothing
+                float distance = sqrt(float(i*i + j*j));
+                float weight = 1.0f / (1.0f + distance);
+                sum += heightmap[newRow * terrainInfo.Depth + newCol] * weight;
+                totalWeight += weight;
             }
         }
     }
-    return (sum / count);
+    return (totalWeight > 0) ? (sum / totalWeight) : 0.0f;
 }
 
 // Function to set up the terrain mesh (vertices, indices, normals)
@@ -95,7 +106,9 @@ void Terrain::SetupMesh() {
 
     float HalfWidth = (terrainInfo.Width - 1) * terrainInfo.CellSpacing * 0.5f;
     float HalfDepth = (terrainInfo.Depth - 1) * terrainInfo.CellSpacing * 0.5f;
-    float HeightScale = 1000.0f;  // Adjust as needed
+    float HeightScale = 2000.0f;  // Significantly increased height for more dramatic mountains
+
+    std::cout << "Setting up terrain mesh..." << std::endl;
 
     // Iterate through the terrain grid and assign height values from the heightmap
     for (unsigned int row = 0; row < terrainInfo.Depth; row++) {
@@ -109,12 +122,18 @@ void Terrain::SetupMesh() {
 
             // Set the vertex position (X, Y, Z)
             Vertices[Index].Position = glm::vec3(PosX, PosY, PosZ);
+            
+            // Set texture coordinates (normalized)
+            Vertices[Index].TexCoords = glm::vec2(
+                static_cast<float>(col) / static_cast<float>(terrainInfo.Width - 1),
+                static_cast<float>(row) / static_cast<float>(terrainInfo.Depth - 1)
+            );
         }
     }
 
-
     // Generate normals for the terrain vertices
     GenerateNormals(Vertices);
+    std::cout << "Terrain normals generated" << std::endl;
 
     // Set up OpenGL buffers (VAO, VBO, EBO)
     glGenVertexArrays(1, &vao);
@@ -125,45 +144,72 @@ void Terrain::SetupMesh() {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, Vertices.size() * sizeof(Vertex), &Vertices[0], GL_STATIC_DRAW);
 
-    // Set up vertex attributes (position, texture coordinates, normals)
+    // Set up vertex attributes (position, normal, texcoords)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0); // Position
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords)); // TexCoord
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal)); // Normal
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal)); // Normal
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords)); // TexCoord
     glEnableVertexAttribArray(2);
 
     SetupIndexBuffer();
+    std::cout << "Terrain mesh setup complete" << std::endl;
 
     glBindVertexArray(0);
 }
 
 // Function to generate normals for the terrain vertices
 void Terrain::GenerateNormals(std::vector<Vertex>& Vertices) {
-    float inverseCellSpacing = 1.0f / (2.0f * terrainInfo.CellSpacing);
+    // Initialize normals to zero
+    for (auto& vertex : Vertices) {
+        vertex.Normal = glm::vec3(0.0f, 0.0f, 0.0f);
+    }
 
-    for (unsigned int row = 0; row < terrainInfo.Width; row++) {
-        for (unsigned int col = 0; col < terrainInfo.Depth; col++) {
-            float rowNeg = (row == 0) ? heightmap[row * terrainInfo.Depth + col] : heightmap[(row - 1) * terrainInfo.Depth + col];
-            float rowPos = (row == terrainInfo.Width - 1) ? heightmap[row * terrainInfo.Depth + col] : heightmap[(row + 1) * terrainInfo.Depth + col];
-            float colNeg = (col == 0) ? heightmap[row * terrainInfo.Depth + col] : heightmap[row * terrainInfo.Depth + (col - 1)];
-            float colPos = (col == terrainInfo.Depth - 1) ? heightmap[row * terrainInfo.Depth + col] : heightmap[row * terrainInfo.Depth + (col + 1)];
+    // For each vertex, calculate normal by averaging the normals of adjacent faces
+    for (unsigned int z = 0; z < terrainInfo.Depth - 1; ++z) {
+        for (unsigned int x = 0; x < terrainInfo.Width - 1; ++x) {
+            // Indices of the four corners of the current quad
+            unsigned int topLeft = z * terrainInfo.Width + x;
+            unsigned int topRight = topLeft + 1;
+            unsigned int bottomLeft = (z + 1) * terrainInfo.Width + x;
+            unsigned int bottomRight = bottomLeft + 1;
 
-            float x = rowNeg - rowPos;
-            if (row == 0 || row == terrainInfo.Width - 1) x *= 2.0f;
+            // Vertices of the four corners
+            glm::vec3 vTL = Vertices[topLeft].Position;
+            glm::vec3 vTR = Vertices[topRight].Position;
+            glm::vec3 vBL = Vertices[bottomLeft].Position;
+            glm::vec3 vBR = Vertices[bottomRight].Position;
 
-            float y = colPos - colNeg;
-            if (col == 0 || col == terrainInfo.Depth - 1) y *= 2.0f;
+            // Calculate normal for first triangle (TL, BL, TR)
+            glm::vec3 v1 = vBL - vTL;
+            glm::vec3 v2 = vTR - vTL;
+            glm::vec3 normal1 = glm::normalize(glm::cross(v1, v2));
 
-            glm::vec3 tangentZ(0.0f, x * inverseCellSpacing, 1.0f);
-            glm::vec3 tangentX(1.0f, y * inverseCellSpacing, 0.0f);
+            // Calculate normal for second triangle (TR, BL, BR)
+            glm::vec3 v3 = vBR - vTR;
+            glm::vec3 v4 = vBL - vTR;
+            glm::vec3 normal2 = glm::normalize(glm::cross(v3, v4));
 
-            glm::vec3 normal = glm::cross(tangentZ, tangentX);
-            normal = glm::normalize(normal);
+            // Add these normals to each of the involved vertices
+            // Later we'll normalize them after all contributions are summed
+            Vertices[topLeft].Normal += normal1;
+            Vertices[topRight].Normal += normal1;
+            Vertices[topRight].Normal += normal2;
+            Vertices[bottomLeft].Normal += normal1;
+            Vertices[bottomLeft].Normal += normal2;
+            Vertices[bottomRight].Normal += normal2;
+        }
+    }
 
-            Vertices[row * terrainInfo.Depth + col].Normal = normal;
+    // Normalize all normals
+    for (auto& vertex : Vertices) {
+        if (glm::length(vertex.Normal) > 0.0f) {
+            vertex.Normal = glm::normalize(vertex.Normal);
+        } else {
+            // Default normal pointing upward if no face contributions
+            vertex.Normal = glm::vec3(0.0f, 1.0f, 0.0f);
         }
     }
 }
@@ -193,9 +239,28 @@ void Terrain::SetupIndexBuffer() {
 }
 
 // Function to render the terrain
+// Function to render the terrain
 void Terrain::DrawTerrain() {
+    // First save current OpenGL state
+    GLboolean cullFaceEnabled;
+    GLint cullFaceMode;
+    glGetBooleanv(GL_CULL_FACE, &cullFaceEnabled);
+    glGetIntegerv(GL_CULL_FACE_MODE, &cullFaceMode);
+
+    // Disable culling completely for terrain rendering
+    glDisable(GL_CULL_FACE);
+
+    // Bind the vertex array object and draw
     glBindVertexArray(vao);
-    glCullFace(GL_FRONT);
+
+    // Draw the terrain using indices
     glDrawElements(GL_TRIANGLES, (terrainInfo.Width - 1) * (terrainInfo.Depth - 1) * 6, GL_UNSIGNED_INT, 0);
+
     glBindVertexArray(0);
+
+    // Restore previous OpenGL state
+    if (cullFaceEnabled) {
+        glEnable(GL_CULL_FACE);
+        glCullFace(cullFaceMode);
+    }
 }

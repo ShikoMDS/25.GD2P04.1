@@ -5,6 +5,7 @@
 #include "Skybox.h"
 #include "Camera.h"
 #include "LightManager.h"
+#include "Terrain.h"
 
 class Scene2 : public Scene {
 public:
@@ -15,14 +16,18 @@ public:
     void cleanup() override;
 
 private:
+    GLuint loadTexture(const std::string& path);
+
     Shader LightingShader;
     Shader SkyboxShader;
-    Model GardenPlant;
-    Model Tree;
-    Model Statue;
+    Shader TerrainShader;
     Model Sphere;
     Skybox LSkybox;
     Camera& GCamera;
     LightManager& GLightManager;
     Material material;
+    Terrain terrain;
+
+    // Terrain textures
+    GLuint terrainTextures[4]; // Grass, Dirt, Rock, Snow
 };

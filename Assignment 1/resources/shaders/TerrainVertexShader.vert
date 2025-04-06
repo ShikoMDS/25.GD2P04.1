@@ -24,9 +24,11 @@ void main() {
     
     // Calculate normalized height (assuming Y is up)
     // This is the normalized height (0-1) used for texture blending
-    // The 25.0 value should be adjusted based on your terrain's max height
-    Height = (FragPos.y + 5.0) / 25.0;
-    Height = clamp(Height, 0.0, 1.0);
+    // We need to adjust this calculation to account for the terrain's position at Y=2.5
+    // We normalize based on the terrain's actual height range (not including its Y position)
+    float rawHeight = FragPos.y;
+    Height = (rawHeight - 2.5f) / 20.0f; // Normalize to 0-1 range, adjusting for Y=2.5 position
+    Height = clamp(Height, 0.0f, 1.0f);
     
     // Set final position in clip space
     gl_Position = projection * view * vec4(FragPos, 1.0);

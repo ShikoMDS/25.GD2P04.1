@@ -116,17 +116,24 @@ void main() {
     // Directional light
     vec3 lightDir = normalize(-directionalLight.direction);
     
-    // Ambient - increase ambient light to make terrain more visible
-    vec3 ambient = directionalLight.color * material.ambient * directionalLight.intensity * 0.7;
-    
-    // Diffuse
-    float diff = max(dot(norm, lightDir), 0.0);
+    // Ambient - reduced multiplier
+    vec3 ambient = directionalLight.color * material.ambient * directionalLight.intensity * 0.5;
+
+    // Diffuse - Use half-Lambert wrapping for softer lighting
+    float NdotL = dot(norm, lightDir);
+    float diff = max(NdotL * 0.5 + 0.5, 0.0) * 0.7; // Half-Lambert with reduced intensity
     vec3 diffuse = directionalLight.color * (diff * material.diffuse) * directionalLight.intensity;
-    
-    // Specular (Blinn-Phong)
+
+    // Specular (modified Blinn-Phong) - with reduced intensity
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(norm, halfwayDir), 0.0), material.shininess);
+    spec *= 0.3; // Reduce specular intensity to prevent whitening
     vec3 specular = directionalLight.color * (spec * material.specular) * directionalLight.intensity;
+
+    // Add ambient occlusion effect based on height to darken valleys
+    float ao = mix(0.5, 1.0, smoothstep(0.0, 0.3, Height));
+    ambient *= ao;
+    diffuse *= ao;
     
     // Combine lighting with base color
     vec3 result = (ambient + diffuse) * baseColor + specular;

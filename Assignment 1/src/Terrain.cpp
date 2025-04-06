@@ -214,7 +214,7 @@ void Terrain::GenerateNormals(std::vector<Vertex>& Vertices) {
     }
 }
 
-// Function to set up the index buffer (EBO)
+// Function to set up the index buffer (EBO) with correct winding order
 void Terrain::SetupIndexBuffer() {
     unsigned int FaceCount = (terrainInfo.Width - 1) * (terrainInfo.Depth - 1) * 2;
     unsigned int DrawCount = FaceCount * 3; // 3 indices per triangle
@@ -223,13 +223,15 @@ void Terrain::SetupIndexBuffer() {
     int Index = 0;
     for (unsigned int row = 0; row < (terrainInfo.Depth - 1); row++) {
         for (unsigned int col = 0; col < (terrainInfo.Width - 1); col++) {
-            Indices[Index++] = row * terrainInfo.Width + col;
-            Indices[Index++] = (row + 1) * terrainInfo.Width + col;
-            Indices[Index++] = row * terrainInfo.Width + (col + 1);
+            // First triangle - ensure counter-clockwise winding
+            Indices[Index++] = row * terrainInfo.Width + col;               // Bottom left
+            Indices[Index++] = row * terrainInfo.Width + (col + 1);         // Bottom right
+            Indices[Index++] = (row + 1) * terrainInfo.Width + col;         // Top left
 
-            Indices[Index++] = row * terrainInfo.Width + (col + 1);
-            Indices[Index++] = (row + 1) * terrainInfo.Width + col;
-            Indices[Index++] = (row + 1) * terrainInfo.Width + (col + 1);
+            // Second triangle - ensure counter-clockwise winding
+            Indices[Index++] = row * terrainInfo.Width + (col + 1);         // Bottom right
+            Indices[Index++] = (row + 1) * terrainInfo.Width + (col + 1);   // Top right
+            Indices[Index++] = (row + 1) * terrainInfo.Width + col;         // Top left
         }
     }
 

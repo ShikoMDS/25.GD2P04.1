@@ -160,6 +160,8 @@
     <ClCompile Include="src\LightManager.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Model.cpp" />
+    <ClCompile Include="src\PerlinNoise.cpp" />
+    <ClCompile Include="src\Quad.cpp" />
     <ClCompile Include="src\Scene1.cpp" />
     <ClCompile Include="src\Scene2.cpp" />
     <ClCompile Include="src\Scene3.cpp" />
@@ -171,7 +173,13 @@
     <ClCompile Include="src\Terrain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="resources\shaders\AnimationFragmentShader.frag" />
+    <None Include="resources\shaders\AnimationVertexShader.vert" />
     <None Include="resources\shaders\FragmentShader.frag" />
+    <None Include="resources\shaders\PerlinTerrainFragmentShader.frag" />
+    <None Include="resources\shaders\PerlinTerrainVertexShader.vert" />
+    <None Include="resources\shaders\QuadFragmentShader.frag" />
+    <None Include="resources\shaders\QuadVertexShader.vert" />
     <None Include="resources\shaders\OutlineFragmentShader.frag" />
     <None Include="resources\shaders\OutlineVertexShader.vert" />
     <None Include="resources\shaders\ReflectionFragmentShader.frag" />
@@ -189,6 +197,8 @@
     <ClInclude Include="include\LightManager.h" />
     <ClInclude Include="include\Mesh.h" />
     <ClInclude Include="include\Model.h" />
+    <ClInclude Include="include\PerlinNoise.h" />
+    <ClInclude Include="include\Quad.h" />
     <ClInclude Include="include\Scene.h" />
     <ClInclude Include="include\Scene1.h" />
     <ClInclude Include="include\Scene2.h" />

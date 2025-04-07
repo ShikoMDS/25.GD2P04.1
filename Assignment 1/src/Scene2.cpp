@@ -39,7 +39,7 @@ void Scene2::load() {
     // This can be done by modifying the direction in LightManager if needed
     
     // Initialize material properties for terrain
-    material.Ambient = glm::vec3(0.6f, 0.6f, 0.6f);    // Brighter ambient for terrain
+    material.Ambient = glm::vec3(0.75f, 0.75f, 0.75f);    // Brighter ambient for terrain
     material.Diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
     material.Specular = glm::vec3(0.2f, 0.2f, 0.2f);   // Low specular for terrain
     material.Shininess = 16.0f;                        // Lower shininess for terrain
@@ -68,7 +68,7 @@ void Scene2::render() {
 
     // Lighting adjustments for more diffuse appearance
     TerrainShader.setVec3("directionalLight.direction", glm::vec3(0.4f, -0.8f, 0.4f));  // Light from side, slightly steeper
-    TerrainShader.setVec3("directionalLight.color", glm::vec3(1.0f, 1.0f, 0.98f));      // Almost white light
+    TerrainShader.setVec3("directionalLight.color", glm::vec3(1.0f, 1.0f, 1.0f));      // Almost white light
     TerrainShader.setFloat("directionalLight.intensity", 2.0f);                         // Increased intensity
 
     // Material adjustments

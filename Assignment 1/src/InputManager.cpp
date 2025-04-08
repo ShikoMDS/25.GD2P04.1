@@ -15,6 +15,7 @@ InputManager::InputManager(Camera& camera, LightManager& lightManager, SceneMana
         {GLFW_KEY_4, false},
         {GLFW_KEY_C, false},
         {GLFW_KEY_X, false},
+        {GLFW_KEY_R, false},
 		{GLFW_KEY_TAB, false}
     };
 }
@@ -33,7 +34,6 @@ void InputManager::processInput(GLFWwindow* Window, const float DeltaTime)
         int width, height;
         glfwGetWindowSize(Window, &width, &height);
         glfwSetCursorPos(Window, width / 2.0, height / 2.0);
-        // Optionally, do NOT reset MFirstMouse here if you want a smooth transition.
     }
 
     // If alt was just released (transition from true to false)
@@ -46,15 +46,38 @@ void InputManager::processInput(GLFWwindow* Window, const float DeltaTime)
     if (glfwGetKey(Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(Window, true);
 
-    // Handle scene changes by delegating to the SceneManager
-    if (glfwGetKey(Window, GLFW_KEY_1) == GLFW_PRESS)
+    // Handle scene changes - use key debouncing to prevent multiple scene switches
+    if (glfwGetKey(Window, GLFW_KEY_1) == GLFW_PRESS && !MKeyState[GLFW_KEY_1]) {
+        MKeyState[GLFW_KEY_1] = true;
         mSceneManager.switchScene(SceneType::SCENE_1);
-    if (glfwGetKey(Window, GLFW_KEY_2) == GLFW_PRESS)
+    }
+    else if (glfwGetKey(Window, GLFW_KEY_1) == GLFW_RELEASE) {
+        MKeyState[GLFW_KEY_1] = false;
+    }
+
+    if (glfwGetKey(Window, GLFW_KEY_2) == GLFW_PRESS && !MKeyState[GLFW_KEY_2]) {
+        MKeyState[GLFW_KEY_2] = true;
         mSceneManager.switchScene(SceneType::SCENE_2);
-    if (glfwGetKey(Window, GLFW_KEY_3) == GLFW_PRESS)
+    }
+    else if (glfwGetKey(Window, GLFW_KEY_2) == GLFW_RELEASE) {
+        MKeyState[GLFW_KEY_2] = false;
+    }
+
+    if (glfwGetKey(Window, GLFW_KEY_3) == GLFW_PRESS && !MKeyState[GLFW_KEY_3]) {
+        MKeyState[GLFW_KEY_3] = true;
         mSceneManager.switchScene(SceneType::SCENE_3);
-    if (glfwGetKey(Window, GLFW_KEY_4) == GLFW_PRESS)
+    }
+    else if (glfwGetKey(Window, GLFW_KEY_3) == GLFW_RELEASE) {
+        MKeyState[GLFW_KEY_3] = false;
+    }
+
+    if (glfwGetKey(Window, GLFW_KEY_4) == GLFW_PRESS && !MKeyState[GLFW_KEY_4]) {
+        MKeyState[GLFW_KEY_4] = true;
         mSceneManager.switchScene(SceneType::SCENE_4);
+    }
+    else if (glfwGetKey(Window, GLFW_KEY_4) == GLFW_RELEASE) {
+        MKeyState[GLFW_KEY_4] = false;
+    }
 
     // Handle wireframe toggle (X key)
     if (glfwGetKey(Window, GLFW_KEY_X) == GLFW_PRESS && !MKeyState[GLFW_KEY_X])
@@ -76,6 +99,18 @@ void InputManager::processInput(GLFWwindow* Window, const float DeltaTime)
     else if (glfwGetKey(Window, GLFW_KEY_C) == GLFW_RELEASE)
     {
         MKeyState[GLFW_KEY_C] = false;
+    }
+
+    // Reset camera position with R key
+    if (glfwGetKey(Window, GLFW_KEY_R) == GLFW_PRESS && !MKeyState[GLFW_KEY_R])
+    {
+        MKeyState[GLFW_KEY_R] = true;
+        mSceneManager.resetCamera();
+        std::cout << "Camera position reset for current scene" << std::endl;
+    }
+    else if (glfwGetKey(Window, GLFW_KEY_R) == GLFW_RELEASE)
+    {
+        MKeyState[GLFW_KEY_R] = false;
     }
 
     // Movement controls (W, A, S, D, Q, E)

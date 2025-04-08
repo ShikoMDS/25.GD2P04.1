@@ -13,7 +13,7 @@ uniform float time;
 
 void main()
 {
-    // Pass texture coordinates to fragment shader with time-based distortion
+    // Pass texture coordinates to fragment shader
     TexCoords = aTexCoords;
     
     // Apply simple wave animation based on time

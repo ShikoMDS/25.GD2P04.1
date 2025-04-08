@@ -66,50 +66,90 @@ GLuint Scene4::loadTexture(const std::string& path) {
 }
 
 void Scene4::setupFramebuffer() {
+    // Delete existing framebuffer resources if they exist
+    if (framebuffer != 0) {
+        glDeleteFramebuffers(1, &framebuffer);
+        framebuffer = 0;
+    }
+
+    if (textureColorBuffer != 0) {
+        glDeleteTextures(1, &textureColorBuffer);
+        textureColorBuffer = 0;
+    }
+
+    if (rbo != 0) {
+        glDeleteRenderbuffers(1, &rbo);
+        rbo = 0;
+    }
+
     // Create and bind the framebuffer
     glGenFramebuffers(1, &framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
     // Get the current window dimensions for proper sizing
-    int width, height;
+    int width = 800;  // Default fallback width
+    int height = 600; // Default fallback height
+
     GLFWwindow* window = glfwGetCurrentContext();
     if (window) {
         glfwGetFramebufferSize(window, &width, &height);
-    }
-    else {
-        width = 800;
-        height = 600;
     }
 
     // Create a texture to hold the color buffer
     glGenTextures(1, &textureColorBuffer);
     glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
-    // Attach the texture to the framebuffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorBuffer, 0);
+    // Use safe texture creation
+    try {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glBindTexture(GL_TEXTURE_2D, 0);
 
-    // Create a renderbuffer object for depth and stencil attachments
-    glGenRenderbuffers(1, &rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        // Attach the texture to the framebuffer
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorBuffer, 0);
 
-    // Attach the renderbuffer to the framebuffer
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+        // Create a renderbuffer object for depth and stencil attachments
+        glGenRenderbuffers(1, &rbo);
+        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    // Check if the framebuffer is complete
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        std::cerr << "ERROR: Framebuffer is not complete!" << std::endl;
+        // Attach the renderbuffer to the framebuffer
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+        // Check if the framebuffer is complete
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            std::cerr << "ERROR: Framebuffer is not complete!" << std::endl;
+
+            // Clean up resources if there's an error
+            glDeleteFramebuffers(1, &framebuffer);
+            glDeleteTextures(1, &textureColorBuffer);
+            glDeleteRenderbuffers(1, &rbo);
+
+            framebuffer = 0;
+            textureColorBuffer = 0;
+            rbo = 0;
+        }
+        else {
+            std::cout << "Framebuffer set up successfully with dimensions: " << width << "x" << height << std::endl;
+        }
+    }
+    catch (...) {
+        std::cerr << "Exception during framebuffer setup!" << std::endl;
+
+        // Clean up resources if there's an exception
+        glDeleteFramebuffers(1, &framebuffer);
+        glDeleteTextures(1, &textureColorBuffer);
+        glDeleteRenderbuffers(1, &rbo);
+
+        framebuffer = 0;
+        textureColorBuffer = 0;
+        rbo = 0;
     }
 
     // Unbind the framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    std::cout << "Framebuffer set up successfully with dimensions: " << width << "x" << height << std::endl;
 }
 
 void Scene4::setupScreenQuad() {
@@ -338,14 +378,32 @@ void Scene4::renderSceneToFramebuffer() {
 }
 
 void Scene4::renderPostProcessing() {
+    // Only proceed if we have a valid framebuffer and texture
+    if (framebuffer == 0 || textureColorBuffer == 0) {
+        std::cerr << "Cannot render post-processing: Invalid framebuffer resources" << std::endl;
+        return;
+    }
+
     // Render to default framebuffer (screen)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // Save GL state
+    GLboolean depthTestEnabled;
+    GLboolean cullFaceEnabled;
+    glGetBooleanv(GL_DEPTH_TEST, &depthTestEnabled);
+    glGetBooleanv(GL_CULL_FACE, &cullFaceEnabled);
+
     // Disable depth test and face culling for rendering the screen-filling quad
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+
+    // Check if shader is valid
+    if (PostProcessingShader.getId() == 0) {
+        std::cerr << "Cannot render post-processing: Invalid shader" << std::endl;
+        return;
+    }
 
     // Activate post-processing shader
     PostProcessingShader.use();
@@ -359,6 +417,12 @@ void Scene4::renderPostProcessing() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
 
+    // Check if VAO exists
+    if (quadVAO == 0) {
+        std::cerr << "Cannot render post-processing: Invalid quad VAO" << std::endl;
+        return;
+    }
+
     // Render the quad
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -366,22 +430,32 @@ void Scene4::renderPostProcessing() {
 
     // Reset state
     glBindTexture(GL_TEXTURE_2D, 0);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+
+    // Restore previous state
+    if (depthTestEnabled) glEnable(GL_DEPTH_TEST);
+    if (cullFaceEnabled) glEnable(GL_CULL_FACE);
 }
 
 void Scene4::cleanup() {
     std::cout << "Cleaning up Scene4 resources..." << std::endl;
 
     // Clean up shaders
-    if (LightingShader.getId() != 0)
+    if (LightingShader.getId() != 0) {
         glDeleteProgram(LightingShader.getId());
-    if (SkyboxShader.getId() != 0)
+        LightingShader.Id = 0;
+    }
+    if (SkyboxShader.getId() != 0) {
         glDeleteProgram(SkyboxShader.getId());
-    if (TerrainShader.getId() != 0)
+        SkyboxShader.Id = 0;
+    }
+    if (TerrainShader.getId() != 0) {
         glDeleteProgram(TerrainShader.getId());
-    if (PostProcessingShader.getId() != 0)
+        TerrainShader.Id = 0;
+    }
+    if (PostProcessingShader.getId() != 0) {
         glDeleteProgram(PostProcessingShader.getId());
+        PostProcessingShader.Id = 0;
+    }
 
     // Clean up models
     GardenPlant.cleanup();
@@ -389,25 +463,40 @@ void Scene4::cleanup() {
     Statue.cleanup();
     LSkybox.cleanup();
 
-    // Clean up terrain textures
+    // Clean up terrain textures - check if they exist first
     for (int i = 0; i < 4; i++) {
-        if (terrainTextures[i] != 0)
+        if (glIsTexture(terrainTextures[i])) {
             glDeleteTextures(1, &terrainTextures[i]);
+            terrainTextures[i] = 0;
+        }
     }
 
     // Clean up framebuffer objects
-    if (framebuffer != 0)
+    if (glIsFramebuffer(framebuffer)) {
         glDeleteFramebuffers(1, &framebuffer);
-    if (textureColorBuffer != 0)
+        framebuffer = 0;
+    }
+
+    if (glIsTexture(textureColorBuffer)) {
         glDeleteTextures(1, &textureColorBuffer);
-    if (rbo != 0)
+        textureColorBuffer = 0;
+    }
+
+    if (glIsRenderbuffer(rbo)) {
         glDeleteRenderbuffers(1, &rbo);
+        rbo = 0;
+    }
 
     // Clean up screen quad
-    if (quadVAO != 0)
+    if (glIsVertexArray(quadVAO)) {
         glDeleteVertexArrays(1, &quadVAO);
-    if (quadVBO != 0)
+        quadVAO = 0;
+    }
+
+    if (glIsBuffer(quadVBO)) {
         glDeleteBuffers(1, &quadVBO);
+        quadVBO = 0;
+    }
 
     std::cout << "Scene4 cleanup complete" << std::endl;
 }

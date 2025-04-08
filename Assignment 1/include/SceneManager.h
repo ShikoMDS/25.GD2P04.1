@@ -11,6 +11,9 @@ public:
     // Switch to a new scene (SCENE_1, SCENE_2, SCENE_3, SCENE_4)
     void switchScene(SceneType newScene);
 
+    // Reset camera position based on current scene
+    void resetCamera();
+
     // Update and render the current scene
     void update(float deltaTime);
     void render();

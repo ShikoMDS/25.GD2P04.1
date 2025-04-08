@@ -49,16 +49,23 @@ public:
 	void processMouseMovement(float OffsetX, float OffsetY, GLboolean ConstrainPitch = true);
 	void processMouseScroll(float OffsetY);
 
+	void reset();
+
 	glm::vec3 VPosition;
 	glm::vec3 VFront;
 	glm::vec3 VUp;
 	glm::vec3 VRight;
 	glm::vec3 VWorldUp;
+	glm::vec3 DefaultPosition;
+	glm::vec3 DefaultUp;
 	float FYaw;
 	float FPitch;
+	float DefaultYaw;
+	float DefaultPitch;
 	float FMovementSpeed;
 	float FMouseSensitivity;
 	float FZoom;
+	float DefaultZoom;
 
 private:
 	void updateCameraVectors();

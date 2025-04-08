@@ -21,6 +21,11 @@ Camera::Camera(float PosX, float PosY, float PosZ, float UpX, float UpY, float U
 	VWorldUp = glm::vec3(UpX, UpY, UpZ);
 	FYaw = Yaw;
 	FPitch = Pitch;
+	DefaultPosition = VPosition;
+	DefaultUp = VUp;
+	DefaultYaw = FYaw;
+	DefaultPitch = FPitch;
+	DefaultZoom = Zoom;
 	updateCameraVectors();
 }
 
@@ -31,6 +36,11 @@ Camera::Camera(glm::vec3 Pos, glm::vec3 Up, float Yaw, float Pitch)
 	VWorldUp = Up;
 	FYaw = Yaw;
 	FPitch = Pitch;
+	DefaultPosition = VPosition;
+	DefaultUp = VUp;
+	DefaultYaw = FYaw;
+	DefaultPitch = FPitch;
+	DefaultZoom = Zoom;
 	updateCameraVectors();
 }
 
@@ -87,6 +97,16 @@ void Camera::processMouseScroll(const float OffsetY)
 		FZoom = 1.0f;
 	if (FZoom > 90.0f)
 		FZoom = 90.0f;
+}
+
+void Camera::reset()
+{
+	VPosition = DefaultPosition;
+	VUp = DefaultUp;
+	FYaw = DefaultYaw;
+	FPitch = DefaultPitch;
+	FZoom = DefaultZoom;
+	updateCameraVectors();
 }
 
 void Camera::updateCameraVectors()

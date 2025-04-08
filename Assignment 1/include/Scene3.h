@@ -21,11 +21,8 @@ public:
 
 private:
     // Standard scene components
-    Shader LightingShader;
-    Shader SkyboxShader;
     Shader QuadShader;         // Shader for rendering textured quads
     Shader AnimationShader;    // Shader for animated noise
-    Shader TerrainShader;      // Perlin-specific terrain shader
     Skybox LSkybox;
     Camera& GCamera;
     LightManager& GLightManager;

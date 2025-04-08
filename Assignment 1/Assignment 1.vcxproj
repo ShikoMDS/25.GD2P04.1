@@ -178,6 +178,8 @@
     <None Include="resources\shaders\FragmentShader.frag" />
     <None Include="resources\shaders\PerlinTerrainFragmentShader.frag" />
     <None Include="resources\shaders\PerlinTerrainVertexShader.vert" />
+    <None Include="resources\shaders\PostProcessingFragmentShader.frag" />
+    <None Include="resources\shaders\PostProcessingVertexShader.vert" />
     <None Include="resources\shaders\QuadFragmentShader.frag" />
     <None Include="resources\shaders\QuadVertexShader.vert" />
     <None Include="resources\shaders\OutlineFragmentShader.frag" />

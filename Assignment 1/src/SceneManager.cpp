@@ -18,6 +18,9 @@ void SceneManager::switchScene(SceneType newScene) {
             std::cout << "Cleaning up current scene..." << std::endl;
             currentScene->cleanup();
         }
+
+        camera.reset();
+
         std::cout << "Switching to scene type " << static_cast<int>(newScene) << std::endl;
         switch (newScene) {
         case SceneType::SCENE_1:

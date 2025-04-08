@@ -14,7 +14,8 @@ InputManager::InputManager(Camera& camera, LightManager& lightManager, SceneMana
         {GLFW_KEY_3, false},
         {GLFW_KEY_4, false},
         {GLFW_KEY_C, false},
-        {GLFW_KEY_X, false}
+        {GLFW_KEY_X, false},
+		{GLFW_KEY_TAB, false}
     };
 }
 

@@ -110,6 +110,9 @@ void Scene3::generatePerlinNoise() {
         if (noiseTexture != 0) {
             std::cout << "Created static noise texture with ID: " << noiseTexture << std::endl;
         }
+        else {
+            std::cerr << "FAILED to create static noise texture!" << std::endl;
+        }
 
         // Initialize animated noise with the same parameters
         animatedNoiseMap = noiseMap; // Start with the same noise
@@ -123,6 +126,9 @@ void Scene3::generatePerlinNoise() {
         animatedNoiseTexture = perlinGenerator.createNoiseTexture(animatedNoiseMap, noiseWidth, noiseHeight, fireColorGradient);
         if (animatedNoiseTexture != 0) {
             std::cout << "Created animated noise texture with ID: " << animatedNoiseTexture << std::endl;
+        }
+        else {
+            std::cerr << "FAILED to create animated noise texture!" << std::endl;
         }
 
         std::cout << "Perlin noise generated and saved successfully." << std::endl;
@@ -152,25 +158,44 @@ void Scene3::updateAnimatedNoise(float deltaTime) {
         return;
     }
 
-    // Update the animated noise texture with time-based offset
-    glm::vec2 offset(animationTime * 0.3f, animationTime * 0.2f);
+    // Create time-dependent offset for the noise
+    glm::vec2 offset(
+        animationTime * 0.5f,            // Steady horizontal movement
+        sin(animationTime * 0.3f) * 3.0f // Oscillating vertical movement
+    );
 
     try {
-        // Generate new noise with time-based offset
+        // Generate new noise with time-based offset and parameters
         animatedNoiseMap = perlinGenerator.generateNoiseMap(
-            noiseWidth, noiseHeight, 50.0f,
-            3, 0.5f, 2.0f, offset
+            noiseWidth,
+            noiseHeight,
+            50.0f + sin(animationTime * 0.2f) * 10.0f,  // Varying scale
+            3,
+            0.5f,
+            2.0f,
+            offset
         );
 
         // Delete the old texture first if it exists
         if (glIsTexture(animatedNoiseTexture)) {
             glDeleteTextures(1, &animatedNoiseTexture);
-            animatedNoiseTexture = 0;
         }
 
-        // Create the new texture
+        // Create the new texture - use a more dramatic fire gradient for animation
+        std::vector<glm::vec3> animatedGradient = {
+            glm::vec3(0.0f, 0.0f, 0.0f),      // Black (low values)
+            glm::vec3(0.5f, 0.0f, 0.0f),      // Dark red
+            glm::vec3(0.7f, 0.0f, 0.0f),      // Red
+            glm::vec3(1.0f, 0.3f, 0.0f),      // Dark orange
+            glm::vec3(1.0f, 0.5f, 0.0f),      // Orange
+            glm::vec3(1.0f, 0.7f, 0.0f),      // Light orange
+            glm::vec3(1.0f, 1.0f, 0.3f),      // Yellow
+            glm::vec3(1.0f, 1.0f, 0.7f),      // Light yellow
+            glm::vec3(1.0f, 1.0f, 1.0f)       // White (high values)
+        };
+
         animatedNoiseTexture = perlinGenerator.createNoiseTexture(
-            animatedNoiseMap, noiseWidth, noiseHeight, fireColorGradient
+            animatedNoiseMap, noiseWidth, noiseHeight, animatedGradient
         );
     }
     catch (const std::exception& e) {
@@ -183,8 +208,8 @@ void Scene3::render() {
     glClearColor(0.0f, 0.05f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Save all OpenGL states
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    // Reset all OpenGL errors before starting
+    while (glGetError() != GL_NO_ERROR);
 
     // Disable depth testing and face culling for 2D rendering
     glDisable(GL_DEPTH_TEST);
@@ -195,52 +220,88 @@ void Scene3::render() {
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 model = glm::mat4(1.0f);
 
-    // Check if textures are valid before rendering
-    if (noiseTexture > 0) {
-        // Static Perlin Noise Quad (top half of screen)
-        QuadShader.use();
-        QuadShader.setMat4("model", glm::translate(model, glm::vec3(0.0f, 0.4f, 0.0f)) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(0.7f, 0.4f, 1.0f)));
-        QuadShader.setMat4("view", view);
-        QuadShader.setMat4("projection", projection);
+    // DRAW FIRST QUAD (STATIC NOISE) - TOP HALF
+    if (noiseTexture > 0 && glIsTexture(noiseTexture)) {
+        // Make sure the shader is valid
+        if (QuadShader.getId() != 0) {
+            QuadShader.use();
 
-        staticNoiseQuad.draw(QuadShader, noiseTexture);
+            // Check for errors after shader activation
+            GLenum err = glGetError();
+            if (err != GL_NO_ERROR) {
+                std::cerr << "Error after QuadShader.use(): " << err << std::endl;
+            }
+
+            // Set uniforms
+            QuadShader.setMat4("model", glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f)) *
+                glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 0.5f, 1.0f)));
+            QuadShader.setMat4("view", view);
+            QuadShader.setMat4("projection", projection);
+
+            // Explicitly set the texture unit and bind
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, noiseTexture);
+            QuadShader.setInt("texture1", 0);
+
+            // Draw the quad
+            staticNoiseQuad.draw(QuadShader, noiseTexture);
+
+            // Check for errors after drawing
+            err = glGetError();
+            if (err != GL_NO_ERROR) {
+                std::cerr << "Error after drawing static quad: " << err << std::endl;
+            }
+        }
+        else {
+            std::cerr << "QuadShader is invalid!" << std::endl;
+        }
+    }
+    else {
+        std::cerr << "Static noise texture " << noiseTexture << " is invalid" << std::endl;
     }
 
-    if (animatedNoiseTexture > 0) {
-        // Animated Perlin Noise Quad (bottom half of screen)
-        AnimationShader.use();
-        AnimationShader.setMat4("model", glm::translate(model, glm::vec3(0.0f, -0.4f, 0.0f)) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(0.7f, 0.4f, 1.0f)));
-        AnimationShader.setMat4("view", view);
-        AnimationShader.setMat4("projection", projection);
-        AnimationShader.setFloat("time", animationTime);
+    // DRAW SECOND QUAD (ANIMATED NOISE) - BOTTOM HALF
+    if (animatedNoiseTexture > 0 && glIsTexture(animatedNoiseTexture)) {
+        // Make sure the shader is valid
+        if (AnimationShader.getId() != 0) {
+            AnimationShader.use();
 
-        animatedNoiseQuad.draw(AnimationShader, animatedNoiseTexture);
+            // Check for errors after shader activation
+            GLenum err = glGetError();
+            if (err != GL_NO_ERROR) {
+                std::cerr << "Error after AnimationShader.use(): " << err << std::endl;
+            }
+
+            // Set uniforms
+            AnimationShader.setMat4("model", glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f)) *
+                glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 0.5f, 1.0f)));
+            AnimationShader.setMat4("view", view);
+            AnimationShader.setMat4("projection", projection);
+            AnimationShader.setFloat("time", animationTime);
+
+            // Explicitly set the texture unit and bind
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, animatedNoiseTexture);
+            AnimationShader.setInt("texture1", 0);
+
+            // Draw the quad
+            animatedNoiseQuad.draw(AnimationShader, animatedNoiseTexture);
+
+            // Check for errors after drawing
+            err = glGetError();
+            if (err != GL_NO_ERROR) {
+                std::cerr << "Error after drawing animated quad: " << err << std::endl;
+            }
+        }
+        else {
+            std::cerr << "AnimationShader is invalid!" << std::endl;
+        }
     }
-
-    // Fallback: Draw a simple quad if textures failed to load
-    if (noiseTexture == 0 && animatedNoiseTexture == 0) {
-        // Use fixed-function rendering as a last resort
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
-
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-
-        // Draw a simple colored quad to verify rendering works
-        glBegin(GL_QUADS);
-        glColor3f(1.0f, 0.0f, 0.0f); glVertex3f(-0.5f, -0.5f, 0.0f);
-        glColor3f(0.0f, 1.0f, 0.0f); glVertex3f(0.5f, -0.5f, 0.0f);
-        glColor3f(0.0f, 0.0f, 1.0f); glVertex3f(0.5f, 0.5f, 0.0f);
-        glColor3f(1.0f, 1.0f, 0.0f); glVertex3f(-0.5f, 0.5f, 0.0f);
-        glEnd();
+    else {
+        std::cerr << "Animated noise texture " << animatedNoiseTexture << " is invalid" << std::endl;
     }
-
-    // Restore OpenGL state
-    glPopAttrib();
 }
+
 
 void Scene3::cleanup() {
     std::cout << "Cleaning up Scene3 resources..." << std::endl;

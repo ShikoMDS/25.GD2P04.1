@@ -67,11 +67,11 @@ void Quad::setupQuad() {
 }
 
 void Quad::draw(const Shader& shader, GLuint textureID) const {
-    shader.use();
+    // DON'T activate the shader here - it should already be active
+    // shader.use(); - REMOVE THIS LINE
 
-    // Bind texture
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureID);
+    // The texture is already bound in the Scene3::render function
+    // Just set the uniform if needed
     shader.setInt("texture1", 0);
 
     // Draw quad

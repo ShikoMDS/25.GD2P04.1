@@ -224,6 +224,7 @@ void Scene3::render() {
     if (noiseTexture > 0 && glIsTexture(noiseTexture)) {
         // Make sure the shader is valid
         if (QuadShader.getId() != 0) {
+            // Use the quad shader
             QuadShader.use();
 
             // Check for errors after shader activation
@@ -264,6 +265,7 @@ void Scene3::render() {
     if (animatedNoiseTexture > 0 && glIsTexture(animatedNoiseTexture)) {
         // Make sure the shader is valid
         if (AnimationShader.getId() != 0) {
+            // Use the animation shader
             AnimationShader.use();
 
             // Check for errors after shader activation
@@ -300,6 +302,12 @@ void Scene3::render() {
     else {
         std::cerr << "Animated noise texture " << animatedNoiseTexture << " is invalid" << std::endl;
     }
+
+    // Rebind to default framebuffer and reset viewport to window size if needed
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // Reset state to default for other scenes
+    glEnable(GL_DEPTH_TEST);
 }
 
 

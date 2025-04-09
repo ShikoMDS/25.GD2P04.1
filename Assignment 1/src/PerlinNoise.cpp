@@ -270,12 +270,21 @@ GLuint PerlinNoise::createNoiseTexture(const std::vector<float>& noiseMap, int w
     std::vector<unsigned char> textureData(width * height * 3);
 
     for (int i = 0; i < width * height; i++) {
-        glm::vec3 color = applyColorGradient(noiseMap[i], colorGradient);
+        // Make sure noiseMap index is valid
+        if (i < noiseMap.size()) {
+            glm::vec3 color = applyColorGradient(noiseMap[i], colorGradient);
 
-        // Convert floating point color (0-1) to byte color (0-255)
-        textureData[i * 3] = static_cast<unsigned char>(color.r * 255.0f);     // R
-        textureData[i * 3 + 1] = static_cast<unsigned char>(color.g * 255.0f); // G
-        textureData[i * 3 + 2] = static_cast<unsigned char>(color.b * 255.0f); // B
+            // Convert floating point color (0-1) to byte color (0-255)
+            textureData[i * 3] = static_cast<unsigned char>(color.r * 255.0f);     // R
+            textureData[i * 3 + 1] = static_cast<unsigned char>(color.g * 255.0f); // G
+            textureData[i * 3 + 2] = static_cast<unsigned char>(color.b * 255.0f); // B
+        }
+        else {
+            // Fill with red if out of bounds (for debugging)
+            textureData[i * 3] = 255;     // R
+            textureData[i * 3 + 1] = 0;   // G
+            textureData[i * 3 + 2] = 0;   // B
+        }
     }
 
     // Create the texture
@@ -288,6 +297,14 @@ GLuint PerlinNoise::createNoiseTexture(const std::vector<float>& noiseMap, int w
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glGenerateMipmap(GL_TEXTURE_2D);
 
+    // Make sure we unbind the texture
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Check for OpenGL errors
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        std::cerr << "OpenGL error in createNoiseTexture: " << err << std::endl;
+    }
+
     return textureID;
 }

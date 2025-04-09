@@ -68,11 +68,7 @@ void Quad::setupQuad() {
 
 void Quad::draw(const Shader& shader, GLuint textureID) const {
     // DON'T activate the shader here - it should already be active
-    // shader.use(); - REMOVE THIS LINE
-
-    // The texture is already bound in the Scene3::render function
-    // Just set the uniform if needed
-    shader.setInt("texture1", 0);
+    // shader.use(); - REMOVED THIS LINE
 
     // Draw quad
     glBindVertexArray(vao);

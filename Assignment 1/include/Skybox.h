@@ -4,11 +4,11 @@ Media Design School
 Auckland
 New Zealand
 
-(c) 2024 Media Design School
+(c) 2025 Media Design School
 
 File Name : Skybox.h
 Description : Definitions for skybox rendering in OpenGL
-Author : Shikomisen (Ayoub Ahmad)
+Author : Ayoub Ahmad
 Mail : ayoub.ahmad@mds.ac.nz
 **************************************************************************/
 
@@ -28,16 +28,16 @@ public:
 	Skybox();
 
 	void draw(const Shader& Shader) const;
-	void render(const Shader& skyboxShader, const Camera& camera, int scrWidth, int scrHeight) const;
+	void render(const Shader& SkyboxShader, const Camera& Camera, int ScrWidth, int ScrHeight) const;
 	void cleanup();
 
 private:
 	void setupSkybox();
 	static unsigned int loadCubeMap(const std::vector<std::string>& Faces);
 
-	unsigned int MVao;
-	unsigned int MVbo;
-	unsigned int MCubeMapTexture;
+	unsigned int PvVao;
+	unsigned int PvVbo;
+	unsigned int PvCubeMapTexture;
 
-	std::vector<std::string> Faces;
+	std::vector<std::string> PvFaces;
 };

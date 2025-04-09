@@ -173,26 +173,6 @@
     <ClCompile Include="src\Terrain.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="resources\shaders\AnimationFragmentShader.frag" />
-    <None Include="resources\shaders\AnimationVertexShader.vert" />
-    <None Include="resources\shaders\FragmentShader.frag" />
-    <None Include="resources\shaders\PerlinTerrainFragmentShader.frag" />
-    <None Include="resources\shaders\PerlinTerrainVertexShader.vert" />
-    <None Include="resources\shaders\PostProcessingFragmentShader.frag" />
-    <None Include="resources\shaders\PostProcessingVertexShader.vert" />
-    <None Include="resources\shaders\QuadFragmentShader.frag" />
-    <None Include="resources\shaders\QuadVertexShader.vert" />
-    <None Include="resources\shaders\OutlineFragmentShader.frag" />
-    <None Include="resources\shaders\OutlineVertexShader.vert" />
-    <None Include="resources\shaders\ReflectionFragmentShader.frag" />
-    <None Include="resources\shaders\ReflectionVertexShader.vert" />
-    <None Include="resources\shaders\SkyboxFragmentShader.frag" />
-    <None Include="resources\shaders\SkyboxVertexShader.vert" />
-    <None Include="resources\shaders\TerrainFragmentShader.frag" />
-    <None Include="resources\shaders\TerrainVertexShader.vert" />
-    <None Include="resources\shaders\VertexShader.vert" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\Engine.h" />
     <ClInclude Include="include\InputManager.h" />
@@ -209,6 +189,22 @@
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\Skybox.h" />
     <ClInclude Include="include\Terrain.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\shaders\AnimationFragmentShader.frag" />
+    <None Include="resources\shaders\AnimationVertexShader.vert" />
+    <None Include="resources\shaders\FragmentShader.frag" />
+    <None Include="resources\shaders\OutlineFragmentShader.frag" />
+    <None Include="resources\shaders\OutlineVertexShader.vert" />
+    <None Include="resources\shaders\PostProcessingFragmentShader.frag" />
+    <None Include="resources\shaders\PostProcessingVertexShader.vert" />
+    <None Include="resources\shaders\QuadFragmentShader.frag" />
+    <None Include="resources\shaders\QuadVertexShader.vert" />
+    <None Include="resources\shaders\SkyboxFragmentShader.frag" />
+    <None Include="resources\shaders\SkyboxVertexShader.vert" />
+    <None Include="resources\shaders\TerrainFragmentShader.frag" />
+    <None Include="resources\shaders\TerrainVertexShader.vert" />
+    <None Include="resources\shaders\VertexShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

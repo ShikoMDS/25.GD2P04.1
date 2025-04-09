@@ -21,7 +21,6 @@ private:
     Shader LightingShader;
     Shader SkyboxShader;
     Shader TerrainShader;
-    Model Sphere;
     Skybox LSkybox;
     Camera& GCamera;
     LightManager& GLightManager;

@@ -9,7 +9,6 @@ Scene2::Scene2(Camera& camera, LightManager& lightManager)
     : LightingShader("resources/shaders/VertexShader.vert", "resources/shaders/FragmentShader.frag"),
     SkyboxShader("resources/shaders/SkyboxVertexShader.vert", "resources/shaders/SkyboxFragmentShader.frag"),
     TerrainShader("resources/shaders/TerrainVertexShader.vert", "resources/shaders/TerrainFragmentShader.frag"),
-    Sphere("resources/models/Sphere/Sphere_HighPoly.obj", ""),
     GCamera(camera),
     GLightManager(lightManager),
     terrain(HeightMapInfo{ "resources/heightmap/Heightmap0.raw", 512, 512, 1.0f })
@@ -134,7 +133,6 @@ void Scene2::cleanup() {
     }
     
     // Cleanup models
-    Sphere.cleanup();
     LSkybox.cleanup();
 }
 

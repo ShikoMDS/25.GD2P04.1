@@ -31,5 +31,7 @@ void main()
     texColor.r *= colorShift;
     texColor.b *= (1.0 / colorShift);
     
+    // Remove the border effect - we're not applying any darkening at the edges
+    
     FragColor = texColor;
 }

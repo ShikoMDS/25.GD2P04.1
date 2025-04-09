@@ -5,6 +5,8 @@
 #include <string>
 #include <ctime>
 #include <fstream>
+#include <glew.h>
+#include <glfw3.h>
 
 // Helper function to ensure directory exists
 void ensureDirectoryExists(const std::string& path) {
@@ -215,27 +217,53 @@ void Scene3::render() {
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    // Set up matrices for 2D rendering
-    glm::mat4 projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+    // Get the window size for proper aspect ratio
+    int width, height;
+    GLFWwindow* window = glfwGetCurrentContext();
+    if (window) {
+        glfwGetFramebufferSize(window, &width, &height);
+    }
+    else {
+        width = 800;
+        height = 600;
+    }
+    float aspectRatio = (float)width / (float)height;
+
+    // Create an orthographic projection that adjusts for window aspect ratio
+    // This is critical for maintaining square shapes
+    glm::mat4 projection;
+    if (aspectRatio >= 1.0f) {
+        // Wide window - adjust the horizontal range to compensate
+        projection = glm::ortho(-aspectRatio, aspectRatio, -1.0f, 1.0f, -1.0f, 1.0f);
+    }
+    else {
+        // Tall window - adjust the vertical range to compensate
+        projection = glm::ortho(-1.0f, 1.0f, -1.0f / aspectRatio, 1.0f / aspectRatio, -1.0f, 1.0f);
+    }
+
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 model = glm::mat4(1.0f);
 
-    // DRAW FIRST QUAD (STATIC NOISE) - TOP HALF
+    // Calculate quad sizes to ensure they are perfectly square
+    float leftOffset = 0.5f;
+    float quadSize = 0.5f;                // Size of each quad (in normalized coordinates)
+    float gap = 1.2f;                     // Gap between quads
+    float leftQuadX = -quadSize - gap / 2 + leftOffset;  // Position of left quad
+    float rightQuadX = gap / 2;             // Position of right quad
+
+    // DRAW FIRST QUAD (STATIC NOISE) - LEFT SIDE
     if (noiseTexture > 0 && glIsTexture(noiseTexture)) {
         // Make sure the shader is valid
         if (QuadShader.getId() != 0) {
             // Use the quad shader
             QuadShader.use();
 
-            // Check for errors after shader activation
-            GLenum err = glGetError();
-            if (err != GL_NO_ERROR) {
-                std::cerr << "Error after QuadShader.use(): " << err << std::endl;
-            }
+            // Position the quad on the left side with proper gap
+            glm::mat4 leftQuadModel = glm::translate(model, glm::vec3(leftQuadX, 0.0f, 0.0f));
+            leftQuadModel = glm::scale(leftQuadModel, glm::vec3(quadSize, quadSize, 1.0f));
 
             // Set uniforms
-            QuadShader.setMat4("model", glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f)) *
-                glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 0.5f, 1.0f)));
+            QuadShader.setMat4("model", leftQuadModel);
             QuadShader.setMat4("view", view);
             QuadShader.setMat4("projection", projection);
 
@@ -246,37 +274,22 @@ void Scene3::render() {
 
             // Draw the quad
             staticNoiseQuad.draw(QuadShader, noiseTexture);
-
-            // Check for errors after drawing
-            err = glGetError();
-            if (err != GL_NO_ERROR) {
-                std::cerr << "Error after drawing static quad: " << err << std::endl;
-            }
-        }
-        else {
-            std::cerr << "QuadShader is invalid!" << std::endl;
         }
     }
-    else {
-        std::cerr << "Static noise texture " << noiseTexture << " is invalid" << std::endl;
-    }
 
-    // DRAW SECOND QUAD (ANIMATED NOISE) - BOTTOM HALF
+    // DRAW SECOND QUAD (ANIMATED NOISE) - RIGHT SIDE
     if (animatedNoiseTexture > 0 && glIsTexture(animatedNoiseTexture)) {
         // Make sure the shader is valid
         if (AnimationShader.getId() != 0) {
             // Use the animation shader
             AnimationShader.use();
 
-            // Check for errors after shader activation
-            GLenum err = glGetError();
-            if (err != GL_NO_ERROR) {
-                std::cerr << "Error after AnimationShader.use(): " << err << std::endl;
-            }
+            // Position the quad on the right side with proper gap
+            glm::mat4 rightQuadModel = glm::translate(model, glm::vec3(rightQuadX, 0.0f, 0.0f));
+            rightQuadModel = glm::scale(rightQuadModel, glm::vec3(quadSize, quadSize, 1.0f));
 
             // Set uniforms
-            AnimationShader.setMat4("model", glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f)) *
-                glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 0.5f, 1.0f)));
+            AnimationShader.setMat4("model", rightQuadModel);
             AnimationShader.setMat4("view", view);
             AnimationShader.setMat4("projection", projection);
             AnimationShader.setFloat("time", animationTime);
@@ -288,28 +301,12 @@ void Scene3::render() {
 
             // Draw the quad
             animatedNoiseQuad.draw(AnimationShader, animatedNoiseTexture);
-
-            // Check for errors after drawing
-            err = glGetError();
-            if (err != GL_NO_ERROR) {
-                std::cerr << "Error after drawing animated quad: " << err << std::endl;
-            }
-        }
-        else {
-            std::cerr << "AnimationShader is invalid!" << std::endl;
         }
     }
-    else {
-        std::cerr << "Animated noise texture " << animatedNoiseTexture << " is invalid" << std::endl;
-    }
-
-    // Rebind to default framebuffer and reset viewport to window size if needed
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Reset state to default for other scenes
     glEnable(GL_DEPTH_TEST);
 }
-
 
 void Scene3::cleanup() {
     std::cout << "Cleaning up Scene3 resources..." << std::endl;

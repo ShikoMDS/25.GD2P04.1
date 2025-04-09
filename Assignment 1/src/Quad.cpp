@@ -13,7 +13,7 @@ Description : Implementation of Quad class for texture rendering
 #include "Quad.h"
 #include <iostream>
 
-Quad::Quad() : vao(0), vbo(0), ebo(0) {
+Quad::Quad() : PvVao(0), PvVbo(0), PvEbo(0) {
     setupQuad();
 }
 
@@ -22,8 +22,8 @@ Quad::~Quad() {
 }
 
 void Quad::setupQuad() {
-    // Vertex data for a quad (position, normal, texcoords)
-    float vertices[] = {
+    // Vertex data for a quad (position, normal, tex coords)
+    constexpr float Vertices[] = {
         // positions          // normals           // texture coords
         -1.0f,  1.0f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 1.0f, // top left
          1.0f,  1.0f, 0.0f,   0.0f, 0.0f, 1.0f,   1.0f, 1.0f, // top right
@@ -32,28 +32,28 @@ void Quad::setupQuad() {
     };
 
     // Indices for drawing the quad as two triangles
-    unsigned int indices[] = {
+    const unsigned int Indices[] = {
         0, 1, 2, // first triangle
         0, 2, 3  // second triangle
     };
 
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-    glGenBuffers(1, &ebo);
+    glGenVertexArrays(1, &PvVao);
+    glGenBuffers(1, &PvVbo);
+    glGenBuffers(1, &PvEbo);
 
-    glBindVertexArray(vao);
+    glBindVertexArray(PvVao);
 
     // Load vertex data
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, PvVbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
 
     // Load index data
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, PvEbo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
 
     // Position attribute
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), static_cast<void*>(nullptr));
 
     // Normal attribute
     glEnableVertexAttribArray(1);
@@ -66,27 +66,25 @@ void Quad::setupQuad() {
     glBindVertexArray(0);
 }
 
-void Quad::draw(const Shader& shader, GLuint textureID) const {
+void Quad::draw(const Shader& Shader, GLuint TextureId) const {
     // DON'T activate the shader here - it should already be active
-    // shader.use(); - REMOVED THIS LINE
-
     // Draw quad
-    glBindVertexArray(vao);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(PvVao);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
 }
 
 void Quad::cleanup() {
-    if (vao != 0) {
-        glDeleteVertexArrays(1, &vao);
-        vao = 0;
+    if (PvVao != 0) {
+        glDeleteVertexArrays(1, &PvVao);
+        PvVao = 0;
     }
-    if (vbo != 0) {
-        glDeleteBuffers(1, &vbo);
-        vbo = 0;
+    if (PvVbo != 0) {
+        glDeleteBuffers(1, &PvVbo);
+        PvVbo = 0;
     }
-    if (ebo != 0) {
-        glDeleteBuffers(1, &ebo);
-        ebo = 0;
+    if (PvEbo != 0) {
+        glDeleteBuffers(1, &PvEbo);
+        PvEbo = 0;
     }
 }

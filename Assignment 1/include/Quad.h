@@ -21,11 +21,16 @@ public:
     Quad();
     ~Quad();
 
-    void draw(const Shader& shader, GLuint textureID) const;
+    Quad(const Quad& Other) = delete;
+    Quad& operator=(const Quad& Other) = delete;
+    Quad(Quad&& Other) noexcept = delete;
+    Quad& operator=(Quad&& Other) noexcept = delete;
+
+    void draw(const Shader& Shader, GLuint TextureId) const;
     void cleanup();
 
 private:
     void setupQuad();
 
-    GLuint vao, vbo, ebo;
+    GLuint PvVao, PvVbo, PvEbo;
 };

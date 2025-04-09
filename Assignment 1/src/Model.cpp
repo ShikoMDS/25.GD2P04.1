@@ -4,7 +4,7 @@ Media Design School
 Auckland
 New Zealand
 
-(c) 2024 Media Design School
+(c) 2025 Media Design School
 
 File Name : Model.cpp
 Description : Implementations for Model class
@@ -26,20 +26,22 @@ Mail : ayoub.ahmad@mds.ac.nz
 
 Model::Model(const std::string& ModelPath, const std::string& TexturePath)
 {
-	this->MDirectory = "resources/textures"; // Set the directory for textures
+	this->PvDirectory = "resources/textures";
 	loadModel(ModelPath);
 	loadTexture(TexturePath);
 }
 
 void Model::draw(const Shader& Shader) const
 {
-	for (const auto& Mesh : MMeshes)
+	for (const auto& Mesh : PvMeshes)
 		Mesh.draw(Shader);
 }
 
-void Model::cleanup() {
-	for (Mesh& mesh : MMeshes) {  // Assuming `meshes` is a std::vector<Mesh>
-		mesh.cleanup();  // Call cleanup on each Mesh in the Model
+void Model::cleanup()
+{
+	for (Mesh& Meshes : PvMeshes)
+	{
+		Meshes.cleanup();
 	}
 }
 
@@ -115,23 +117,22 @@ void Model::loadModel(const std::string& Path)
 		}
 
 		Mesh Mesh(Vertices, Indices, Textures);
-		MMeshes.push_back(Mesh);
+		PvMeshes.push_back(Mesh);
 	}
 }
 
 void Model::loadTexture(const std::string& Path)
 {
-	const std::string FullPath = MDirectory + '/' + Path;
-	std::cout << "Loading texture: " << FullPath << '\n';
+	const std::string FullPath = PvDirectory + '/' + Path;
+	//std::cout << "Loading texture: " << FullPath << '\n';
 
 	Texture Texture;
-	Texture.Id = textureFromFile(FullPath.c_str(), MDirectory);
+	Texture.Id = textureFromFile(FullPath.c_str(), PvDirectory);
 	Texture.Type = "texture_diffuse";
 	Texture.Path = Path;
-	MTexturesLoaded.push_back(Texture);
+	PvTexturesLoaded.push_back(Texture);
 
-	// Apply the texture to all meshes
-	for (auto& Mesh : MMeshes)
+	for (auto& Mesh : PvMeshes)
 	{
 		Mesh.Textures.push_back(Texture);
 	}
@@ -141,12 +142,10 @@ unsigned int textureFromFile(const char* Path, const std::string& Directory, boo
 {
 	const auto Filename = std::string(Path);
 
-	// Print the absolute path
 	char AbsPath[1024];
 	_fullpath(AbsPath, Filename.c_str(), sizeof(AbsPath));
 	//std::cout << "Absolute path: " << AbsPath << '\n';
 
-	// Check if file exists
 	std::ifstream File(AbsPath);
 	if (!File.good())
 	{
@@ -159,8 +158,7 @@ unsigned int textureFromFile(const char* Path, const std::string& Directory, boo
 	glGenTextures(1, &TextureId);
 
 	int Width, Height, NrComponents;
-	unsigned char* Data = stbi_load(Filename.c_str(), &Width, &Height, &NrComponents, 0);
-	if (Data)
+	if (unsigned char* Data = stbi_load(Filename.c_str(), &Width, &Height, &NrComponents, 0))
 	{
 		GLenum Format = 0;
 		if (NrComponents == 1)

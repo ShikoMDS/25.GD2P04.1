@@ -4,7 +4,7 @@ Media Design School
 Auckland
 New Zealand
 
-(c) 2024 Media Design School
+(c) 2025 Media Design School
 
 File Name : SkyboxVertexShader.vert
 Description : Vertex shader file for skybox rendering

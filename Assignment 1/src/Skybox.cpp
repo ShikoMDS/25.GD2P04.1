@@ -20,12 +20,14 @@ Mail : ayoub.ahmad@mds.ac.nz
 
 Skybox::Skybox()
 {
-	PvFaces = { "resources/skybox/Corona/Right.png",
+	PvFaces = {
+		"resources/skybox/Corona/Right.png",
 		"resources/skybox/Corona/Left.png",
 		"resources/skybox/Corona/Top.png",
 		"resources/skybox/Corona/Bottom.png",
 		"resources/skybox/Corona/Back.png",
-		"resources/skybox/Corona/Front.png" };
+		"resources/skybox/Corona/Front.png"
+	};
 
 	PvCubeMapTexture = loadCubeMap(PvFaces);
 	setupSkybox();
@@ -44,23 +46,27 @@ void Skybox::render(const Shader& SkyboxShader, const Camera& Camera, int ScrWid
 {
 	glDepthFunc(GL_LEQUAL);
 	SkyboxShader.use();
-	SkyboxShader.setMat4("view", glm::mat4(glm::mat3(Camera.getViewMatrix()))); 
-	SkyboxShader.setMat4("projection", Camera.getProjectionMatrix(static_cast<float>(ScrWidth), static_cast<float>(ScrHeight)));
+	SkyboxShader.setMat4("view", glm::mat4(glm::mat3(Camera.getViewMatrix())));
+	SkyboxShader.setMat4("projection",
+	                     Camera.getProjectionMatrix(static_cast<float>(ScrWidth), static_cast<float>(ScrHeight)));
 	draw(SkyboxShader);
 	glDepthFunc(GL_LESS);
 }
 
-void Skybox::cleanup() {
+void Skybox::cleanup()
+{
 	//std::cout << "Cleaning up Skybox resources..." << '\n';
 
 	// Clean up VAO
-	if (PvVao != 0) {
+	if (PvVao != 0)
+	{
 		glDeleteVertexArrays(1, &PvVao);
 		PvVao = 0;
 	}
 
 	// Clean up the cube map texture
-	if (PvCubeMapTexture != 0) {
+	if (PvCubeMapTexture != 0)
+	{
 		glDeleteTextures(1, &PvCubeMapTexture);
 		PvCubeMapTexture = 0;
 	}

@@ -1,3 +1,17 @@
+/***********************************************************************
+Bachelor of Software Engineering
+Media Design School
+Auckland
+New Zealand
+
+(c) 2025 Media Design School
+
+File Name : AnimationVertexShader.frag
+Description : Animation fragment shader for Scene 3 requirements
+Author : Ayoub Ahmad
+Mail : ayoub.ahmad@mds.ac.nz
+**************************************************************************/
+
 #version 460 core
 
 out vec4 FragColor;
@@ -30,8 +44,6 @@ void main()
     float colorShift = sin(time * 0.5) * 0.2 + 0.8;
     texColor.r *= colorShift;
     texColor.b *= (1.0 / colorShift);
-    
-    // Remove the border effect - we're not applying any darkening at the edges
     
     FragColor = texColor;
 }

@@ -4,7 +4,7 @@ Media Design School
 Auckland
 New Zealand
 
-(c) 2024 Media Design School
+(c) 2025 Media Design School
 
 File Name : Shader.cpp
 Description : Implementations for Shader class
@@ -18,93 +18,88 @@ Mail : ayoub.ahmad@mds.ac.nz
 #include <sstream>
 #include <iostream>
 
-Shader::Shader(const char* vertexPath, const char* fragmentPath)
+Shader::Shader(const char* VertexPath, const char* FragmentPath)
 {
-    // 1. Retrieve shader source code
-    std::string vertexCode, fragmentCode;
-    std::ifstream vShaderFile, fShaderFile;
+	std::string VertexCode, FragmentCode;
+	std::ifstream VShaderFile, FShaderFile;
 
-    // Ensure ifstream objects can throw exceptions
-    vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    try
-    {
-        vShaderFile.open(vertexPath);
-        fShaderFile.open(fragmentPath);
-        std::stringstream vShaderStream, fShaderStream;
-        vShaderStream << vShaderFile.rdbuf();
-        fShaderStream << fShaderFile.rdbuf();
-        vShaderFile.close();
-        fShaderFile.close();
-        vertexCode = vShaderStream.str();
-        fragmentCode = fShaderStream.str();
-    }
-    catch (std::ifstream::failure& e)
-    {
-        std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ" << std::endl;
-        std::cerr << "Exception message: " << e.what() << std::endl;
-    }
+	VShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+	FShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+	try
+	{
+		VShaderFile.open(VertexPath);
+		FShaderFile.open(FragmentPath);
+		std::stringstream VShaderStream, FShaderStream;
+		VShaderStream << VShaderFile.rdbuf();
+		FShaderStream << FShaderFile.rdbuf();
+		VShaderFile.close();
+		FShaderFile.close();
+		VertexCode = VShaderStream.str();
+		FragmentCode = FShaderStream.str();
+	}
+	catch (std::ifstream::failure& E)
+	{
+		std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ" << '\n';
+		std::cerr << "Exception message: " << E.what() << '\n';
+	}
 
-    const char* vShaderCode = vertexCode.c_str();
-    const char* fShaderCode = fragmentCode.c_str();
+	const char* VShaderCode = VertexCode.c_str();
+	const char* FShaderCode = FragmentCode.c_str();
 
-    // 2. Compile shaders
-    unsigned int vertex, fragment;
-    vertex = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex, 1, &vShaderCode, nullptr);
-    glCompileShader(vertex);
-    checkCompileErrors(vertex, "VERTEX");
+	unsigned int Vertex, Fragment;
+	Vertex = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(Vertex, 1, &VShaderCode, nullptr);
+	glCompileShader(Vertex);
+	checkCompileErrors(Vertex, "VERTEX");
 
-    fragment = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment, 1, &fShaderCode, nullptr);
-    glCompileShader(fragment);
-    checkCompileErrors(fragment, "FRAGMENT");
+	Fragment = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(Fragment, 1, &FShaderCode, nullptr);
+	glCompileShader(Fragment);
+	checkCompileErrors(Fragment, "FRAGMENT");
 
-    // 3. Link shaders to program
-    Id = glCreateProgram();
-    glAttachShader(Id, vertex);
-    glAttachShader(Id, fragment);
-    glLinkProgram(Id);
-    checkLinkErrors(Id);
+	PbId = glCreateProgram();
+	glAttachShader(PbId, Vertex);
+	glAttachShader(PbId, Fragment);
+	glLinkProgram(PbId);
+	checkLinkErrors(PbId);
 
-    // 4. Delete shaders as they're linked now
-    glDeleteShader(vertex);
-    glDeleteShader(fragment);
+	glDeleteShader(Vertex);
+	glDeleteShader(Fragment);
 }
 
 void Shader::use() const
 {
-	glUseProgram(Id);
+	glUseProgram(PbId);
 }
 
 void Shader::setBool(const std::string& Name, const bool Value) const
 {
-	glUniform1i(glGetUniformLocation(Id, Name.c_str()), static_cast<int>(Value));
+	glUniform1i(glGetUniformLocation(PbId, Name.c_str()), static_cast<int>(Value));
 }
 
 void Shader::setInt(const std::string& Name, const int Value) const
 {
-	glUniform1i(glGetUniformLocation(Id, Name.c_str()), Value);
+	glUniform1i(glGetUniformLocation(PbId, Name.c_str()), Value);
 }
 
 void Shader::setFloat(const std::string& Name, const float Value) const
 {
-	glUniform1f(glGetUniformLocation(Id, Name.c_str()), Value);
+	glUniform1f(glGetUniformLocation(PbId, Name.c_str()), Value);
 }
 
 void Shader::setVec3(const std::string& Name, const glm::vec3& Value) const
 {
-	glUniform3fv(glGetUniformLocation(Id, Name.c_str()), 1, &Value[0]);
+	glUniform3fv(glGetUniformLocation(PbId, Name.c_str()), 1, &Value[0]);
 }
 
 void Shader::setVec3(const std::string& Name, const float X, const float Y, const float Z) const
 {
-	glUniform3f(glGetUniformLocation(Id, Name.c_str()), X, Y, Z);
+	glUniform3f(glGetUniformLocation(PbId, Name.c_str()), X, Y, Z);
 }
 
 void Shader::setMat4(const std::string& Name, const glm::mat4& Mat) const
 {
-	glUniformMatrix4fv(glGetUniformLocation(Id, Name.c_str()), 1, GL_FALSE, &Mat[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(PbId, Name.c_str()), 1, GL_FALSE, &Mat[0][0]);
 }
 
 void Shader::setLight(const std::string& Name, const Light& Light) const
@@ -115,20 +110,20 @@ void Shader::setLight(const std::string& Name, const Light& Light) const
 	setVec3(Name + ".specular", Light.Specular);
 }
 
-GLuint Shader::getId()
+GLuint Shader::getId() const
 {
-    return Id;
+	return PbId;
 }
 
 void Shader::checkCompileErrors(const unsigned int Shader, const std::string& Type)
 {
 	int Success;
-	char InfoLog[1024];
 	if (Type != "PROGRAM")
 	{
 		glGetShaderiv(Shader, GL_COMPILE_STATUS, &Success);
 		if (!Success)
 		{
+			char InfoLog[1024];
 			glGetShaderInfoLog(Shader, 1024, nullptr, InfoLog);
 			std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << Type << "\n" << InfoLog <<
 				"\n -- --------------------------------------------------- -- " <<
@@ -140,10 +135,10 @@ void Shader::checkCompileErrors(const unsigned int Shader, const std::string& Ty
 void Shader::checkLinkErrors(const unsigned int Program)
 {
 	int Success;
-	char InfoLog[1024];
 	glGetProgramiv(Program, GL_LINK_STATUS, &Success);
 	if (!Success)
 	{
+		char InfoLog[1024];
 		glGetProgramInfoLog(Program, 1024, nullptr, InfoLog);
 		std::cout << "ERROR::PROGRAM_LINKING_ERROR\n" << InfoLog <<
 			"\n -- --------------------------------------------------- -- " <<

@@ -68,11 +68,11 @@ public:
 	[[nodiscard]] PointLight& getPointLight(int Index);
 
 private:
-	PointLight MPointLights[10];
-	DirectionalLight MDirectionalLight;
-	SpotLight MSpotLight;
+	PointLight PvPointLights[10];
+	DirectionalLight PvDirectionalLight;
+	SpotLight PvSpotLight;
 
-	bool MPointLightsOn;
-	bool MDirectionalLightOn;
-	bool MSpotLightOn;
+	bool PvPointLightsOn;
+	bool PvDirectionalLightOn;
+	bool PvSpotLightOn;
 };

@@ -4,7 +4,7 @@ Media Design School
 Auckland
 New Zealand
 
-(c) 2024 Media Design School
+(c) 2025 Media Design School
 
 File Name : Shader.h
 Description : Definitions for shader compilation for OpenGL
@@ -47,19 +47,17 @@ public:
 	void setVec3(const std::string& Name, float X, float Y, float Z) const;
 	void setMat4(const std::string& Name, const glm::mat4& Mat) const;
 	void setLight(const std::string& Name, const Light& Light) const;
-	GLuint getId();
+	GLuint getId() const;
 	static void checkCompileErrors(unsigned int Shader, const std::string& Type);
 	static void checkLinkErrors(unsigned int Program);
 
-	unsigned int Id;
+	unsigned int PbId;
 
-	// Inside Shader.h
-	void setMaterial(const Material& material)
+	void setMaterial(const Material& Material) const
 	{
-		setVec3("material.ambient", material.Ambient);
-		setVec3("material.diffuse", material.Diffuse);
-		setVec3("material.specular", material.Specular);
-		setFloat("material.shininess", material.Shininess);
+		setVec3("material.ambient", Material.Ambient);
+		setVec3("material.diffuse", Material.Diffuse);
+		setVec3("material.specular", Material.Specular);
+		setFloat("material.shininess", Material.Shininess);
 	}
-
 };

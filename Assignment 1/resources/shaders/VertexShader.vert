@@ -4,10 +4,10 @@ Media Design School
 Auckland
 New Zealand
 
-(c) 2024 Media Design School
+(c) 2025 Media Design School
 
 File Name : VertexShader.vert
-Description : Vertex shader for object model loading and rendering
+Description : Vertex shader for object model rendering
 Author : Shikomisen (Ayoub Ahmad)
 Mail : ayoub.ahmad@mds.ac.nz
 **************************************************************************/

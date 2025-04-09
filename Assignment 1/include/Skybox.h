@@ -15,12 +15,11 @@ Mail : ayoub.ahmad@mds.ac.nz
 #pragma once
 
 #include "Shader.h"
+#include "Camera.h"
 
 #include <glew.h>
 #include <glm.hpp>
 #include <vector>
-
-#include "Camera.h"
 
 class Skybox
 {

@@ -1,3 +1,17 @@
+/***********************************************************************
+Bachelor of Software Engineering
+Media Design School
+Auckland
+New Zealand
+
+(c) 2025 Media Design School
+
+File Name : Scene4.h
+Description : Declarations for frame buffers and post-processing
+Author : Ayoub Ahmad
+Mail : ayoub.ahmad@mds.ac.nz
+**************************************************************************/
+
 #pragma once
 #include "Scene.h"
 #include "Shader.h"
@@ -8,55 +22,49 @@
 #include "Terrain.h"
 #include <iostream>
 
-class Scene4 : public Scene {
+class Scene4 final : public Scene
+{
 public:
-    Scene4(Camera& camera, LightManager& lightManager);
-    void load() override;
-    void update(float deltaTime) override;
-    void render() override;
-    void cleanup() override;
+	Scene4(Camera& Camera, LightManager& LightManager);
+	void load() override;
+	void update(float DeltaTime) override;
+	void render() override;
+	void cleanup() override;
 
 private:
-    // Helper functions
-    void setupFramebuffer();
-    void setupScreenQuad();
-    void cyclePostProcessingEffect();
-    void renderSceneToFramebuffer();
-    void renderPostProcessing();
+	void setupFramebuffer();
+	void setupScreenQuad();
+	void cyclePostProcessingEffect();
+	void renderSceneToFramebuffer();
+	void renderPostProcessing() const;
 
-    // Models and rendering (reused from Scenes 1 and 2)
-    Shader LightingShader;      // Scene 1 - object shader
-    Shader SkyboxShader;        // Both scenes
-    Shader TerrainShader;       // Scene 2 - terrain shader
-    Shader PostProcessingShader;// Scene 4 - post-processing
+	Shader PvLightingShader;
+	Shader PvSkyboxShader;
+	Shader PvTerrainShader;
+	Shader PvPostProcessingShader;
 
-    Model GardenPlant;
-    Model Tree;
-    Model Statue;
-    Skybox LSkybox;
+	Model PvGardenPlant;
+	Model PvTree;
+	Model PvStatue;
+	Skybox PvSkybox;
 
-    Camera& GCamera;
-    LightManager& GLightManager;
-    Material material;
-    Terrain terrain;
+	Camera* PvCamera;
+	LightManager* PvLightManager;
+	Material PvMaterial;
+	Terrain PvTerrain;
 
-    // Rotation angle for statue (from Scene 1)
-    float mStatueRotation;
+	float PvStatueRotation;
 
-    // Framebuffer objects
-    GLuint framebuffer;
-    GLuint textureColorBuffer;
-    GLuint rbo;
+	GLuint PvFramebuffer;
+	GLuint PvTextureColorBuffer;
+	GLuint PvRbo;
 
-    // Screen quad for post-processing
-    GLuint quadVAO, quadVBO;
+	GLuint PvQuadVao, PvQuadVbo;
 
-    // Post-processing state
-    int currentEffect;    // 0 = normal, 1 = inversion, 2 = grayscale, 3 = rain, 4 = custom
-    float effectTime;     // For time-based effects
-    bool tabKeyPressed;   // To detect key press and release
+	int PvCurrentEffect;
+	float PvEffectTime;
+	bool PvTabKeyPressed;
 
-    // Terrain textures (from Scene 2)
-    GLuint terrainTextures[4]; // Grass, Dirt, Rock, Snow
-    GLuint loadTexture(const std::string& path);
+	GLuint PvTerrainTextures[4];
+	static GLuint loadTexture(const std::string& Path);
 };

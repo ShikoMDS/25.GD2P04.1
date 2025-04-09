@@ -1,29 +1,41 @@
+/***********************************************************************
+Bachelor of Software Engineering
+Media Design School
+Auckland
+New Zealand
+
+(c) 2025 Media Design School
+
+File Name : SceneManager.h
+Description : Declarations for scene management and switching in OpenGL
+Author : Ayoub Ahmad
+Mail : ayoub.ahmad@mds.ac.nz
+**************************************************************************/
+
 #pragma once
-#include <memory>
 #include "Scene.h"
 #include "Camera.h"
 #include "LightManager.h"
 
-class SceneManager {
+#include <memory>
+
+class SceneManager
+{
 public:
-    SceneManager(Camera& camera, LightManager& lightManager);
+	SceneManager(Camera& Camera, LightManager& LightManager);
 
-    // Switch to a new scene (SCENE_1, SCENE_2, SCENE_3, SCENE_4)
-    void switchScene(SceneType newScene);
+	void switchScene(SceneType NewScene);
 
-    // Reset camera position based on current scene
-    void resetCamera();
+	void resetCamera() const;
 
-    // Update and render the current scene
-    void update(float deltaTime);
-    void render();
+	void update(float DeltaTime) const;
+	void render() const;
 
-    // Cleanup current scene resources
-    void cleanup();
+	void cleanup();
 
 private:
-    std::unique_ptr<Scene> currentScene;
-    SceneType activeScene;
-    Camera& camera;
-    LightManager& lightManager;
+	std::unique_ptr<Scene> PvCurrentScene;
+	SceneType PvActiveScene;
+	Camera* PvCamera;
+	LightManager* PvLightManager;
 };

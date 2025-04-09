@@ -1,4 +1,19 @@
+/***********************************************************************
+Bachelor of Software Engineering
+Media Design School
+Auckland
+New Zealand
+
+(c) 2025 Media Design School
+
+File Name : TerrainVertexShader.frag
+Description : Terrain fragment shader for specified requirements
+Author : Ayoub Ahmad
+Mail : ayoub.ahmad@mds.ac.nz
+**************************************************************************/
+
 #version 460 core
+
 out vec4 FragColor;
 
 in vec3 FragPos;
@@ -6,14 +21,16 @@ in vec3 Normal;
 in vec2 TexCoords;
 in float Height;
 
-struct Material {
+struct Material 
+{
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
     float shininess;
 };
 
-struct DirectionalLight {
+struct DirectionalLight 
+{
     vec3 direction;
     vec3 color;
     float intensity;
@@ -29,7 +46,8 @@ uniform DirectionalLight directionalLight;
 uniform bool useTextures;             // Whether to use textures or solid colors
 
 // Function to calculate texture blend weights based on height
-vec4 calculateBlendWeights(float height) {
+vec4 calculateBlendWeights(float height) 
+{
     vec4 weights = vec4(0.0);
     
     // Define blend regions with smooth transitions
@@ -52,9 +70,12 @@ vec4 calculateBlendWeights(float height) {
     
     // Normalize weights to ensure they sum to 1.0
     float totalWeight = weights.r + weights.g + weights.b + weights.a;
-    if (totalWeight > 0.0) {
+    if (totalWeight > 0.0) 
+    {
         weights /= totalWeight;
-    } else {
+    } 
+    else 
+    {
         // Fallback: use lowest texture if no weights are assigned
         weights.r = 1.0;
     }
@@ -62,14 +83,16 @@ vec4 calculateBlendWeights(float height) {
     return weights;
 }
 
-void main() {
+void main() 
+{
     // Calculate the blend weights based on height
     vec4 blendWeights = calculateBlendWeights(Height);
     
     vec3 baseColor;
     
     // Decide whether to use textures or solid colors
-    if (useTextures) {
+    if (useTextures) 
+    {
         // Try to sample textures but with fallback mechanism
         vec4 grassColor = texture(terrainTextures[0], TexCoords * 20.0);
         vec4 dirtColor = texture(terrainTextures[1], TexCoords * 20.0);
@@ -83,7 +106,8 @@ void main() {
             (rockColor.a > 0.0) && 
             (snowColor.a > 0.0);
             
-        if (validTextures) {
+        if (validTextures) 
+        {
             // Blend textures based on weights
             vec4 textureColor = 
                 blendWeights.r * grassColor +
@@ -92,7 +116,9 @@ void main() {
                 blendWeights.a * snowColor;
                 
             baseColor = textureColor.rgb;
-        } else {
+        } 
+        else 
+        {
             // Fallback to solid colors if textures don't seem valid
             baseColor = 
                 blendWeights.r * terrainColors[0] +
@@ -100,7 +126,9 @@ void main() {
                 blendWeights.b * terrainColors[2] +
                 blendWeights.a * terrainColors[3];
         }
-    } else {
+    } 
+    else 
+    {
         // Use solid colors
         baseColor = 
             blendWeights.r * terrainColors[0] +
@@ -138,15 +166,14 @@ void main() {
     // Combine lighting with base color
     vec3 result = (ambient + diffuse) * baseColor + specular;
     
-    // Additional effects
-    
     // Darken valleys (based on height)
     float valleyFactor = smoothstep(0.0, 0.3, Height);
     result *= mix(0.8, 1.0, valleyFactor);
     
-    // Add slight blue tint to snow at distance (fake atmospheric effect)
+    // Add slight blue tint to snow at distance
     float snowAmount = blendWeights.a;
-    if (snowAmount > 0.0) {
+    if (snowAmount > 0.0) 
+    {
         float distanceFactor = length(viewPos - FragPos) / 100.0;
         distanceFactor = clamp(distanceFactor, 0.0, 1.0);
         vec3 snowTint = mix(result, vec3(0.8, 0.9, 1.0), distanceFactor * 0.3 * snowAmount);

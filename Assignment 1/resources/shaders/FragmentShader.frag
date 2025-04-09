@@ -1,3 +1,17 @@
+/***********************************************************************
+Bachelor of Software Engineering
+Media Design School
+Auckland
+New Zealand
+
+(c) 2025 Media Design School
+
+File Name : FragmentShader.frag
+Description : Fragment shader for object model rendering
+Author : Shikomisen (Ayoub Ahmad)
+Mail : ayoub.ahmad@mds.ac.nz
+**************************************************************************/
+
 #version 460 core
 
 out vec4 FragColor;
@@ -6,15 +20,17 @@ in vec2 TexCoords;
 in vec3 FragPos;
 in vec3 Normal;
 
-struct Material {
-    sampler2D diffuseMap;  // Diffuse texture sampler (must be bound to unit 0)
-    vec3 ambient;          // Ambient color (if no texture)
-    vec3 diffuse;          // Diffuse color (if no texture)
+struct Material 
+{
+    sampler2D diffuseMap;  
+    vec3 ambient;          
+    vec3 diffuse;          
     vec3 specular;
     float shininess;
 };
 
-struct PointLight {
+struct PointLight 
+{
     vec3 position;
     vec3 color;
     float constant;
@@ -22,13 +38,15 @@ struct PointLight {
     float quadratic;
 };
 
-struct DirectionalLight {
+struct DirectionalLight 
+{
     vec3 direction;
     vec3 color;
     float ambientStrength;
 };
 
-struct SpotLight {
+struct SpotLight 
+{
     vec3 position;
     vec3 direction;
     vec3 color;
@@ -45,7 +63,7 @@ uniform DirectionalLight directionalLight;
 uniform SpotLight spotLight;
 uniform vec3 viewPos;
 uniform bool useTexture; 
-uniform vec3 solidColor; // (Not used in lighting calculations)
+uniform vec3 solidColor; 
 
 vec3 CalculateDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir, vec3 baseColor)
 {
@@ -116,7 +134,8 @@ void main()
     vec3 baseColor = useTexture ? texture(material.diffuseMap, TexCoords).rgb : material.diffuse;
 
     vec3 result = CalculateDirectionalLight(directionalLight, norm, viewDir, baseColor);
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 2; i++) 
+    {
         result += CalculatePointLight(pointLights[i], norm, FragPos, viewDir, baseColor);
     }
     result += CalculateSpotLight(spotLight, norm, FragPos, viewDir, baseColor);

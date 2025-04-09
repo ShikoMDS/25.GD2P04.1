@@ -4,7 +4,7 @@ Media Design School
 Auckland
 New Zealand
 
-(c) 2024 Media Design School
+(c) 2025 Media Design School
 
 File Name : Model.h
 Description : Definitions for object models in OpenGL
@@ -34,10 +34,10 @@ private:
 	void loadModel(const std::string& Path);
 	void loadTexture(const std::string& Path);
 
-	std::vector<Mesh> MMeshes;
-	std::string MDirectory;
-	std::vector<Texture> MTexturesLoaded;
-	std::string MTexturePath;
+	std::vector<Mesh> PvMeshes;
+	std::string PvDirectory;
+	std::vector<Texture> PvTexturesLoaded;
+	std::string PvTexturePath;
 };
 
 unsigned int textureFromFile(const char* Path, const std::string& Directory, bool Gamma = false);

@@ -4,10 +4,12 @@ Media Design School
 Auckland
 New Zealand
 
-(c) 2024 Media Design School
+(c) 2025 Media Design School
 
 File Name : PerlinNoise.h
 Description : Perlin noise generation for terrain and effects
+Author : Shikomisen (Ayoub Ahmad)
+Mail : ayoub.ahmad@mds.ac.nz
 **************************************************************************/
 
 #pragma once
@@ -18,44 +20,37 @@ Description : Perlin noise generation for terrain and effects
 #include <ctime>
 #include <string>
 #include <glew.h>
-#include <glm.hpp>  // Added GLM include
+#include <glm.hpp>
 #include <fstream>
 
 
-class PerlinNoise {
+class PerlinNoise
+{
 public:
-    // Constructor with optional seed (default uses current time)
-    PerlinNoise(unsigned int seed = (unsigned int)std::time(nullptr));
+	explicit PerlinNoise(unsigned int Seed = static_cast<unsigned int>(std::time(nullptr)));
 
-    // Generate 2D Perlin noise
-    float noise(float x, float y) const;
+	// Generate 2D Perlin noise
+	[[nodiscard]] float noise(float X, float Y) const;
+	// Generate 3D Perlin noise 
+	[[nodiscard]] float noise(float X, float Y, float Z) const;
+	[[nodiscard]] float fractalNoise(float X, float Y, int Octaves, float Persistence) const;
+	std::vector<float> generateNoiseMap(int Width, int Height, float Scale, int Octaves, float Persistence,
+	                                    float Lacunarity, glm::vec2 Offset = glm::vec2(0, 0)) const;
 
-    // Generate 3D Perlin noise (added to match implementation)
-    float noise(float x, float y, float z) const;
+	static bool saveAsRaw(const std::vector<float>& NoiseMap, int Width, int Height, const std::string& Filename);
 
-    // Generate 2D Perlin noise with multiple octaves (fractal)
-    float fractalNoise(float x, float y, int octaves, float persistence) const;
+	static bool saveAsJpg(const std::vector<float>& NoiseMap, int Width, int Height, const std::string& Filename,
+	                      const std::vector<glm::vec3>& ColourGradient);
 
-    // Generate a noise map of specified dimensions
-    std::vector<float> generateNoiseMap(int width, int height, float scale, int octaves, float persistence, float lacunarity, glm::vec2 offset = glm::vec2(0, 0));
+	static GLuint createNoiseTexture(const std::vector<float>& NoiseMap, int Width, int Height,
+	                                 const std::vector<glm::vec3>& ColourGradient);
 
-    // Save noise data as RAW file
-    bool saveAsRaw(const std::vector<float>& noiseMap, int width, int height, const std::string& filename);
-
-    // Save noise data as JPG file with color gradient
-    bool saveAsJpg(const std::vector<float>& noiseMap, int width, int height, const std::string& filename, const std::vector<glm::vec3>& colorGradient);
-
-    // Create a texture from noise data with color gradient
-    GLuint createNoiseTexture(const std::vector<float>& noiseMap, int width, int height, const std::vector<glm::vec3>& colorGradient);
-
-    // Apply color gradient to a noise value
-    glm::vec3 applyColorGradient(float noiseValue, const std::vector<glm::vec3>& colorGradient) const;
+	[[nodiscard]] static glm::vec3 applyColourGradient(float NoiseValue, const std::vector<glm::vec3>& ColourGradient);
 
 private:
-    std::vector<int> p; // Permutation table
+	std::vector<int> PvPermutation;
 
-    // Helper functions made static to avoid non-static member function calls
-    static float fade(float t);
-    static float lerp(float a, float b, float t);
-    static float grad(int hash, float x, float y, float z);
+	static float fade(float T);
+	static float lerp(float A, float B, float T);
+	static float grad(int Hash, float X, float Y, float Z);
 };

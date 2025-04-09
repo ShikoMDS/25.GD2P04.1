@@ -33,14 +33,14 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_SAMPLES, 4);
 
-	GLFWwindow* window = glfwCreateWindow(ScrWidth, ScrHeight, "OpenGL Project", nullptr, nullptr);
-	if (!window)
+	GLFWwindow* Window = glfwCreateWindow(ScrWidth, ScrHeight, "OpenGL Project", nullptr, nullptr);
+	if (!Window)
 	{
 		std::cerr << "Failed to create GLFW window" << '\n';
 		glfwTerminate();
 		return -1;
 	}
-	glfwMakeContextCurrent(window);
+	glfwMakeContextCurrent(Window);
 
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK)
@@ -58,7 +58,7 @@ int main()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	Engine App(window);
+	Engine App(Window);
 	App.run();
 
 	glfwTerminate();

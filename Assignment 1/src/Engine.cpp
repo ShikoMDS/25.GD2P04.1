@@ -1,50 +1,64 @@
+/***********************************************************************
+Bachelor of Software Engineering
+Media Design School
+Auckland
+New Zealand
+
+(c) 2025 Media Design School
+
+File Name : Engine.cpp
+Description : Implementation of the core engine functionality including
+	the application loop, subsystem coordination, and resource management
+Author : Ayoub Ahmad
+Mail : ayoub.ahmad@mds.ac.nz
+**************************************************************************/
+
 #include "Engine.h"
-#include <iostream>
 
-Engine::Engine(GLFWwindow* win)
-    : window(win),
-    camera(glm::vec3(0.0f, 5.0f, 30.0f)),
-    lightManager(),
-    sceneManager(camera, lightManager),
-    inputManager(camera, lightManager, sceneManager)
+Engine::Engine(GLFWwindow* Window)
+	: PvWindow(Window),
+	  PvCamera(glm::vec3(0.0f, 5.0f, 30.0f)),
+	  PvSceneManager(PvCamera, PvLightManager),
+	  PvInputManager(PvCamera, PvSceneManager)
 {
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(PvWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    // Set the GLFW user pointer to this Engine instance so we can access it in callbacks
-    glfwSetWindowUserPointer(window, this);
+	glfwSetWindowUserPointer(PvWindow, this);
 
-    // Set the cursor position callback
-    glfwSetCursorPosCallback(window, [](GLFWwindow* win, double xpos, double ypos) {
-        Engine* engine = static_cast<Engine*>(glfwGetWindowUserPointer(win));
-        engine->inputManager.mouseCallback(win, xpos, ypos);
-        });
+	glfwSetCursorPosCallback(PvWindow, [](GLFWwindow* Win, const double Xpos, const double Ypos)
+	{
+		const auto AppEngine = static_cast<Engine*>(glfwGetWindowUserPointer(Win));
+		AppEngine->PvInputManager.mouseCallback(Win, Xpos, Ypos);
+	});
 
-    // Set the scroll callback
-    glfwSetScrollCallback(window, [](GLFWwindow* win, double xoffset, double yoffset) {
-        Engine* engine = static_cast<Engine*>(glfwGetWindowUserPointer(win));
-        engine->inputManager.scrollCallback(win, xoffset, yoffset);
-        });
+	glfwSetScrollCallback(PvWindow, [](GLFWwindow* Win, const double Xoffset, const double Yoffset)
+	{
+		const auto AppEngine = static_cast<Engine*>(glfwGetWindowUserPointer(Win));
+		AppEngine->PvInputManager.scrollCallback(Win, Xoffset, Yoffset);
+	});
 
-    // Set the framebuffer size callback
-    glfwSetFramebufferSizeCallback(window, [](GLFWwindow* win, int width, int height) {
-        Engine* engine = static_cast<Engine*>(glfwGetWindowUserPointer(win));
-        engine->inputManager.frameBufferSizeCallback(win, width, height);
-        });
+	glfwSetFramebufferSizeCallback(PvWindow, [](GLFWwindow* Win, const int Width, const int Height)
+	{
+		[[maybe_unused]] const auto AppEngine = static_cast<Engine*>(glfwGetWindowUserPointer(Win));
+		InputManager::frameBufferSizeCallback(Win, Width, Height);
+	});
 }
 
-void Engine::run() {
-    float lastFrame = 0.0f;
-    while (!glfwWindowShouldClose(window)) {
-        float currentFrame = static_cast<float>(glfwGetTime());
-        float deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+void Engine::run()
+{
+	float LastFrame = 0.0f;
+	while (!glfwWindowShouldClose(PvWindow))
+	{
+		const float CurrentFrame = static_cast<float>(glfwGetTime());
+		const float DeltaTime = CurrentFrame - LastFrame;
+		LastFrame = CurrentFrame;
 
-        inputManager.processInput(window, deltaTime);
-        sceneManager.update(deltaTime);
-        sceneManager.render();
+		PvInputManager.processInput(PvWindow, DeltaTime);
+		PvSceneManager.update(DeltaTime);
+		PvSceneManager.render();
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-    sceneManager.cleanup();
+		glfwSwapBuffers(PvWindow);
+		glfwPollEvents();
+	}
+	PvSceneManager.cleanup();
 }

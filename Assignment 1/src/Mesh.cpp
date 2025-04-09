@@ -4,7 +4,7 @@ Media Design School
 Auckland
 New Zealand
 
-(c) 2024 Media Design School
+(c) 2025 Media Design School
 
 File Name : Mesh.cpp
 Description : Implementations for Mesh class
@@ -36,59 +36,64 @@ void Mesh::draw(const Shader& Shader) const
 		else if (Name == "texture_specular")
 			Number = std::to_string(SpecularNr++);
 
-		Shader.setInt(Name + Number, I);
+		Shader.setInt(Name + Number, static_cast<int>(I));
 		glBindTexture(GL_TEXTURE_2D, Textures[I].Id);
 
-		if (Textures[I].Id == 0) {
-			std::cout << "Warning: texture " << Textures[I].Path << " failed to load." << std::endl;
+		if (Textures[I].Id == 0)
+		{
+			std::cout << "Warning: texture " << Textures[I].Path << " failed to load." << '\n';
 		}
-
 	}
 
-	glBindVertexArray(MVao);
-	glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(Indices.size()), GL_UNSIGNED_INT, nullptr);
+	glBindVertexArray(PvVao);
+	glDrawElements(GL_TRIANGLES, static_cast<int>(Indices.size()), GL_UNSIGNED_INT, nullptr);
 	glBindVertexArray(0);
 
 	glActiveTexture(GL_TEXTURE0);
-
 }
 
-void Mesh::cleanup() {
-	// Delete VAO, VBO, and EBO
-	if (MVao != 0) {
-		glDeleteVertexArrays(1, &MVao);
-		MVao = 0;
+void Mesh::cleanup()
+{
+	if (PvVao != 0)
+	{
+		glDeleteVertexArrays(1, &PvVao);
+		PvVao = 0;
 	}
-	if (MVbo != 0) {
-		glDeleteBuffers(1, &MVbo);
-		MVbo = 0;
+	if (PvVbo != 0)
+	{
+		glDeleteBuffers(1, &PvVbo);
+		PvVbo = 0;
 	}
-	if (MEbo != 0) {
-		glDeleteBuffers(1, &MEbo);
-		MEbo = 0;
+	if (PvEbo != 0)
+	{
+		glDeleteBuffers(1, &PvEbo);
+		PvEbo = 0;
 	}
 
-	// Delete textures
-	for (auto& texture : Textures) {
-		if (texture.Id != 0) {
-			glDeleteTextures(1, &texture.Id);
-			texture.Id = 0;
+	for (auto& Texture : Textures)
+	{
+		if (Texture.Id != 0)
+		{
+			glDeleteTextures(1, &Texture.Id);
+			Texture.Id = 0;
 		}
 	}
 }
 
 void Mesh::setupMesh()
 {
-	glGenVertexArrays(1, &MVao);
-	glGenBuffers(1, &MVbo);
-	glGenBuffers(1, &MEbo);
+	glGenVertexArrays(1, &PvVao);
+	glGenBuffers(1, &PvVbo);
+	glGenBuffers(1, &PvEbo);
 
-	glBindVertexArray(MVao);
-	glBindBuffer(GL_ARRAY_BUFFER, MVbo);
-	glBufferData(GL_ARRAY_BUFFER, Vertices.size() * sizeof(Vertex), Vertices.data(), GL_STATIC_DRAW);
+	glBindVertexArray(PvVao);
+	glBindBuffer(GL_ARRAY_BUFFER, PvVbo);
+	glBufferData(GL_ARRAY_BUFFER, static_cast<long long>(Vertices.size() * sizeof(Vertex)), Vertices.data(),
+	             GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, MEbo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, Indices.size() * sizeof(unsigned int), Indices.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, PvEbo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<long long>(Indices.size() * sizeof(unsigned int)), Indices.data(),
+	             GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), static_cast<void*>(nullptr));

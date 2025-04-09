@@ -1,3 +1,17 @@
+/***********************************************************************
+Bachelor of Software Engineering
+Media Design School
+Auckland
+New Zealand
+
+(c) 2025 Media Design School
+
+File Name : AnimationVertexShader.vert
+Description : Animation vertex shader for Scene 3 requirements
+Author : Ayoub Ahmad
+Mail : ayoub.ahmad@mds.ac.nz
+**************************************************************************/
+
 #version 460 core
 
 layout (location = 0) in vec3 aPos;

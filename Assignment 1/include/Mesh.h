@@ -4,7 +4,7 @@ Media Design School
 Auckland
 New Zealand
 
-(c) 2024 Media Design School
+(c) 2025 Media Design School
 
 File Name : Mesh.h
 Description : Definitions for model mesh in OpenGL
@@ -67,7 +67,7 @@ namespace std
 
 struct Texture
 {
-	unsigned int Id;
+	unsigned int Id = 0;
 	std::string Type;
 	std::string Path;
 };
@@ -78,7 +78,7 @@ public:
 	Mesh(std::vector<Vertex> Vertices, std::vector<unsigned int> Indices, std::vector<Texture> Textures);
 
 	void draw(const Shader& Shader) const;
-	void cleanup();  // Add this method to clean up the Mesh
+	void cleanup();
 
 	std::vector<Vertex> Vertices;
 	std::vector<unsigned int> Indices;
@@ -87,7 +87,7 @@ public:
 private:
 	void setupMesh();
 
-	unsigned int MVao;
-	unsigned int MVbo;
-	unsigned int MEbo;
+	unsigned int PvVao;
+	unsigned int PvVbo;
+	unsigned int PvEbo;
 };

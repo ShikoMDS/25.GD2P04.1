@@ -1,4 +1,20 @@
+/***********************************************************************
+Bachelor of Software Engineering
+Media Design School
+Auckland
+New Zealand
+
+(c) 2024 Media Design School
+
+File Name : Terrain.h
+Description : Declarations for terrain rendering in OpenGL program
+Author : Shikomisen (Ayoub Ahmad)
+Mail : ayoub.ahmad@mds.ac.nz
+**************************************************************************/
+
 #pragma once
+
+#include "Mesh.h"
 
 #include <string>
 #include <vector>
@@ -6,36 +22,38 @@
 #include <iostream>
 #include <glew.h>
 #include <glm.hpp>
-#include "Mesh.h" // Include the Mesh.h file which already has the Vertex struct
 
-// Structure to hold heightmap information
-struct HeightMapInfo {
-    std::string FilePath = "";
-    unsigned int Width = 0;
-    unsigned int Depth = 0;
-    float CellSpacing = 1.0f;
+struct HeightMapInfo
+{
+	std::string FilePath;
+	unsigned int Width = 0;
+	unsigned int Depth = 0;
+	float CellSpacing = 1.0f;
 };
 
-// Terrain class definition
-class Terrain {
+class Terrain
+{
 public:
-    Terrain(const HeightMapInfo& info);
-    ~Terrain();
+	explicit Terrain(const HeightMapInfo& Info);
+	~Terrain();
 
-    // Setup and draw functions
-    void SetupTerrain();  // Function to set up the terrain
-    void DrawTerrain();   // Function to draw the terrain
+	Terrain(const Terrain& Other) = delete;
+	Terrain& operator=(const Terrain& Other) = delete;
+	Terrain(Terrain&& Other) noexcept = delete;
+	Terrain& operator=(Terrain&& Other) noexcept = delete;
+
+	void setupTerrain();
+	void drawTerrain() const;
 
 private:
-    HeightMapInfo terrainInfo;     // Terrain info
-    std::vector<float> heightmap;  // Heightmap data
-    GLuint vao, vbo, ebo;          // OpenGL buffers
+	HeightMapInfo PvTerrainInfo;
+	std::vector<float> PvHeightmap;
+	GLuint PvVao, PvVbo, PvEbo;
 
-    // Private functions for setting up and calculating the terrain
-    void LoadHeightMap();  // Load heightmap from file
-    void SmoothHeights();
-    float Average(unsigned row, unsigned col);
-    void SetupMesh();      // Setup VAO, VBO, and vertex data
-    void SetupIndexBuffer(); // Setup EBO for indexed rendering
-    void GenerateNormals(std::vector<Vertex>& Vertices); // Generate normals
+	void loadHeightMap();
+	void smoothHeights();
+	[[nodiscard]] float average(unsigned Row, unsigned Col) const;
+	void setupMesh();
+	void setupIndexBuffer();
+	void generateNormals(std::vector<Vertex>& Vertices) const;
 };

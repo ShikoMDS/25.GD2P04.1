@@ -1,205 +1,230 @@
+/***********************************************************************
+Bachelor of Software Engineering
+Media Design School
+Auckland
+New Zealand
+
+(c) 2025 Media Design School
+
+File Name : InputManager.cpp
+Description : Implementations for InputManager class handling user input
+Author : Ayoub Ahmad
+Mail : ayoub.ahmad@mds.ac.nz
+**************************************************************************/
+
 #include "InputManager.h"
-#include "SceneManager.h"  // Include the header for SceneManager
+#include "SceneManager.h"
+
 #include <iostream>
 #include <glfw3.h>
 
-InputManager::InputManager(Camera& camera, LightManager& lightManager, SceneManager& sceneManager)
-    : MCamera(camera), MLightManager(lightManager), mSceneManager(sceneManager),
-    MWireframe(false), MCursorVisible(false), MFirstMouse(true),
-    MLastX(800 / 2.0f), MLastY(600 / 2.0f)
+InputManager::InputManager(Camera& Camera, SceneManager& SceneManager)
+	: PvCamera(&Camera), PvSceneManager(&SceneManager),
+	  PvWireframe(false), PvCursorVisible(false), PvFirstMouse(true),
+	  PvLastX(800 / 2.0f), PvLastY(600 / 2.0f)
 {
-    MKeyState = {
-        {GLFW_KEY_1, false},
-        {GLFW_KEY_2, false},
-        {GLFW_KEY_3, false},
-        {GLFW_KEY_4, false},
-        {GLFW_KEY_C, false},
-        {GLFW_KEY_X, false},
-        {GLFW_KEY_R, false},
+	PvKeyState = {
+		{GLFW_KEY_1, false},
+		{GLFW_KEY_2, false},
+		{GLFW_KEY_3, false},
+		{GLFW_KEY_4, false},
+		{GLFW_KEY_C, false},
+		{GLFW_KEY_X, false},
+		{GLFW_KEY_R, false},
 		{GLFW_KEY_TAB, false}
-    };
+	};
 }
 
 void InputManager::processInput(GLFWwindow* Window, const float DeltaTime)
 {
-    // Check current state of alt keys
-    bool altCurrentlyDown = (glfwGetKey(Window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
-        glfwGetKey(Window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS);
+	// Check current state of alt keys
+	const bool AltCurrentlyDown = (glfwGetKey(Window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
+		glfwGetKey(Window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS);
 
-    // If alt was just pressed (transition from false to true)
-    if (altCurrentlyDown && !mAltDown) {
-        mAltDown = true;
-        glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        // Reset the cursor position to the center only once
-        int width, height;
-        glfwGetWindowSize(Window, &width, &height);
-        glfwSetCursorPos(Window, width / 2.0, height / 2.0);
-    }
+	// If alt was just pressed (transition from false to true)
+	if (AltCurrentlyDown && !PvAltDown)
+	{
+		PvAltDown = true;
+		glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		// Reset the cursor position to the center only once
+		int Width, Height;
+		glfwGetWindowSize(Window, &Width, &Height);
+		glfwSetCursorPos(Window, Width / 2.0, Height / 2.0);
+	}
 
-    // If alt was just released (transition from true to false)
-    if (!altCurrentlyDown && mAltDown) {
-        mAltDown = false;
-        glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        MFirstMouse = true; // so that the next movement is smooth
-    }
+	// If alt was just released (transition from true to false)
+	if (!AltCurrentlyDown && PvAltDown)
+	{
+		PvAltDown = false;
+		glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		PvFirstMouse = true;
+	}
 
-    if (glfwGetKey(Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(Window, true);
+	if (glfwGetKey(Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(Window, true);
 
-    // Handle scene changes - use key debouncing to prevent multiple scene switches
-    if (glfwGetKey(Window, GLFW_KEY_1) == GLFW_PRESS && !MKeyState[GLFW_KEY_1]) {
-        MKeyState[GLFW_KEY_1] = true;
-        mSceneManager.switchScene(SceneType::SCENE_1);
-    }
-    else if (glfwGetKey(Window, GLFW_KEY_1) == GLFW_RELEASE) {
-        MKeyState[GLFW_KEY_1] = false;
-    }
+	// Handle scene changes with key debouncing
+	if (glfwGetKey(Window, GLFW_KEY_1) == GLFW_PRESS && !PvKeyState[GLFW_KEY_1])
+	{
+		PvKeyState[GLFW_KEY_1] = true;
+		PvSceneManager->switchScene(SceneType::Scene1);
+	}
+	else if (glfwGetKey(Window, GLFW_KEY_1) == GLFW_RELEASE)
+	{
+		PvKeyState[GLFW_KEY_1] = false;
+	}
 
-    if (glfwGetKey(Window, GLFW_KEY_2) == GLFW_PRESS && !MKeyState[GLFW_KEY_2]) {
-        MKeyState[GLFW_KEY_2] = true;
-        mSceneManager.switchScene(SceneType::SCENE_2);
-    }
-    else if (glfwGetKey(Window, GLFW_KEY_2) == GLFW_RELEASE) {
-        MKeyState[GLFW_KEY_2] = false;
-    }
+	if (glfwGetKey(Window, GLFW_KEY_2) == GLFW_PRESS && !PvKeyState[GLFW_KEY_2])
+	{
+		PvKeyState[GLFW_KEY_2] = true;
+		PvSceneManager->switchScene(SceneType::Scene2);
+	}
+	else if (glfwGetKey(Window, GLFW_KEY_2) == GLFW_RELEASE)
+	{
+		PvKeyState[GLFW_KEY_2] = false;
+	}
 
-    if (glfwGetKey(Window, GLFW_KEY_3) == GLFW_PRESS && !MKeyState[GLFW_KEY_3]) {
-        MKeyState[GLFW_KEY_3] = true;
-        mSceneManager.switchScene(SceneType::SCENE_3);
-    }
-    else if (glfwGetKey(Window, GLFW_KEY_3) == GLFW_RELEASE) {
-        MKeyState[GLFW_KEY_3] = false;
-    }
+	if (glfwGetKey(Window, GLFW_KEY_3) == GLFW_PRESS && !PvKeyState[GLFW_KEY_3])
+	{
+		PvKeyState[GLFW_KEY_3] = true;
+		PvSceneManager->switchScene(SceneType::Scene3);
+	}
+	else if (glfwGetKey(Window, GLFW_KEY_3) == GLFW_RELEASE)
+	{
+		PvKeyState[GLFW_KEY_3] = false;
+	}
 
-    if (glfwGetKey(Window, GLFW_KEY_4) == GLFW_PRESS && !MKeyState[GLFW_KEY_4]) {
-        MKeyState[GLFW_KEY_4] = true;
-        mSceneManager.switchScene(SceneType::SCENE_4);
-    }
-    else if (glfwGetKey(Window, GLFW_KEY_4) == GLFW_RELEASE) {
-        MKeyState[GLFW_KEY_4] = false;
-    }
+	if (glfwGetKey(Window, GLFW_KEY_4) == GLFW_PRESS && !PvKeyState[GLFW_KEY_4])
+	{
+		PvKeyState[GLFW_KEY_4] = true;
+		PvSceneManager->switchScene(SceneType::Scene4);
+	}
+	else if (glfwGetKey(Window, GLFW_KEY_4) == GLFW_RELEASE)
+	{
+		PvKeyState[GLFW_KEY_4] = false;
+	}
 
-    // Handle wireframe toggle (X key)
-    if (glfwGetKey(Window, GLFW_KEY_X) == GLFW_PRESS && !MKeyState[GLFW_KEY_X])
-    {
-        MKeyState[GLFW_KEY_X] = true;
-        toggleWireframeMode();
-    }
-    else if (glfwGetKey(Window, GLFW_KEY_X) == GLFW_RELEASE)
-    {
-        MKeyState[GLFW_KEY_X] = false;
-    }
+	// Handle wireframe toggle (X key)
+	if (glfwGetKey(Window, GLFW_KEY_X) == GLFW_PRESS && !PvKeyState[GLFW_KEY_X])
+	{
+		PvKeyState[GLFW_KEY_X] = true;
+		toggleWireframeMode();
+	}
+	else if (glfwGetKey(Window, GLFW_KEY_X) == GLFW_RELEASE)
+	{
+		PvKeyState[GLFW_KEY_X] = false;
+	}
 
-    // Handle cursor visibility toggle (C key)
-    if (glfwGetKey(Window, GLFW_KEY_C) == GLFW_PRESS && !MKeyState[GLFW_KEY_C])
-    {
-        MKeyState[GLFW_KEY_C] = true;
-        toggleCursorVisibility(Window);
-    }
-    else if (glfwGetKey(Window, GLFW_KEY_C) == GLFW_RELEASE)
-    {
-        MKeyState[GLFW_KEY_C] = false;
-    }
+	// Handle cursor visibility toggle (C key)
+	if (glfwGetKey(Window, GLFW_KEY_C) == GLFW_PRESS && !PvKeyState[GLFW_KEY_C])
+	{
+		PvKeyState[GLFW_KEY_C] = true;
+		toggleCursorVisibility(Window);
+	}
+	else if (glfwGetKey(Window, GLFW_KEY_C) == GLFW_RELEASE)
+	{
+		PvKeyState[GLFW_KEY_C] = false;
+	}
 
-    // Reset camera position with R key
-    if (glfwGetKey(Window, GLFW_KEY_R) == GLFW_PRESS && !MKeyState[GLFW_KEY_R])
-    {
-        MKeyState[GLFW_KEY_R] = true;
-        mSceneManager.resetCamera();
-        std::cout << "Camera position reset for current scene" << std::endl;
-    }
-    else if (glfwGetKey(Window, GLFW_KEY_R) == GLFW_RELEASE)
-    {
-        MKeyState[GLFW_KEY_R] = false;
-    }
+	// Reset camera position with R key
+	if (glfwGetKey(Window, GLFW_KEY_R) == GLFW_PRESS && !PvKeyState[GLFW_KEY_R])
+	{
+		PvKeyState[GLFW_KEY_R] = true;
+		PvSceneManager->resetCamera();
+		std::cout << "Camera position reset for current scene" << std::endl;
+	}
+	else if (glfwGetKey(Window, GLFW_KEY_R) == GLFW_RELEASE)
+	{
+		PvKeyState[GLFW_KEY_R] = false;
+	}
 
-    // Movement controls (W, A, S, D, Q, E)
-    if (glfwGetKey(Window, GLFW_KEY_W) == GLFW_PRESS)
-        MCamera.processKeyboard(Forward, DeltaTime);
-    if (glfwGetKey(Window, GLFW_KEY_S) == GLFW_PRESS)
-        MCamera.processKeyboard(Backward, DeltaTime);
-    if (glfwGetKey(Window, GLFW_KEY_A) == GLFW_PRESS)
-        MCamera.processKeyboard(Left, DeltaTime);
-    if (glfwGetKey(Window, GLFW_KEY_D) == GLFW_PRESS)
-        MCamera.processKeyboard(Right, DeltaTime);
-    if (glfwGetKey(Window, GLFW_KEY_Q) == GLFW_PRESS)
-        MCamera.processKeyboard(Up, DeltaTime);
-    if (glfwGetKey(Window, GLFW_KEY_E) == GLFW_PRESS)
-        MCamera.processKeyboard(Down, DeltaTime);
+	// Movement controls (W, A, S, D, Q, E)
+	if (glfwGetKey(Window, GLFW_KEY_W) == GLFW_PRESS)
+		PvCamera->processKeyboard(Forward, DeltaTime);
+	if (glfwGetKey(Window, GLFW_KEY_S) == GLFW_PRESS)
+		PvCamera->processKeyboard(Backward, DeltaTime);
+	if (glfwGetKey(Window, GLFW_KEY_A) == GLFW_PRESS)
+		PvCamera->processKeyboard(Left, DeltaTime);
+	if (glfwGetKey(Window, GLFW_KEY_D) == GLFW_PRESS)
+		PvCamera->processKeyboard(Right, DeltaTime);
+	if (glfwGetKey(Window, GLFW_KEY_Q) == GLFW_PRESS)
+		PvCamera->processKeyboard(Up, DeltaTime);
+	if (glfwGetKey(Window, GLFW_KEY_E) == GLFW_PRESS)
+		PvCamera->processKeyboard(Down, DeltaTime);
 }
 
 void InputManager::toggleWireframeMode()
 {
-    MWireframe = !MWireframe;
-    if (MWireframe)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    else
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	PvWireframe = !PvWireframe;
+	if (PvWireframe)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	else
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void InputManager::toggleCursorVisibility(GLFWwindow* Window)
 {
-    MCursorVisible = !MCursorVisible;
-    if (MCursorVisible)
-    {
-        glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        MFirstMouse = true;
-    }
-    else
-    {
-        glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    }
+	PvCursorVisible = !PvCursorVisible;
+	if (PvCursorVisible)
+	{
+		glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		PvFirstMouse = true;
+	}
+	else
+	{
+		glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
 }
 
-void InputManager::frameBufferSizeCallback(GLFWwindow* Window, const int Width, const int Height)
+void InputManager::frameBufferSizeCallback([[maybe_unused]] GLFWwindow* Window, const int Width, const int Height)
 {
-    glViewport(0, 0, Width, Height);
+	glViewport(0, 0, Width, Height);
 }
 
 void InputManager::mouseCallback(GLFWwindow* Window, const double PosX, const double PosY)
 {
-    // If the alt key is pressed, don't update the camera
-    if (glfwGetKey(Window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
-        glfwGetKey(Window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS)
-    {
-        return;
-    }
+	// If alt key is pressed, don't update camera
+	if (glfwGetKey(Window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
+		glfwGetKey(Window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS)
+	{
+		return;
+	}
 
-    // If the cursor is visible, do not process camera movement
-    if (MCursorVisible) return;
+	// If cursor is visible, do not process camera movement
+	if (PvCursorVisible) return;
 
-    // On the first mouse movement after cursor is disabled, reset the last position
-    if (MFirstMouse)
-    {
-        MLastX = PosX;
-        MLastY = PosY;
-        MFirstMouse = false;
-    }
+	// On first mouse movement after cursor is disabled, reset last position
+	if (PvFirstMouse)
+	{
+		PvLastX = PosX;
+		PvLastY = PosY;
+		PvFirstMouse = false;
+	}
 
-    const double OffsetX = PosX - MLastX;
-    const double OffsetY = MLastY - PosY;  // y-coordinates are inverted
+	const double OffsetX = PosX - PvLastX;
+	const double OffsetY = PvLastY - PosY;
 
-    MLastX = PosX;
-    MLastY = PosY;
+	PvLastX = PosX;
+	PvLastY = PosY;
 
-    // Update the camera's orientation based on mouse movement
-    MCamera.processMouseMovement(static_cast<float>(OffsetX), static_cast<float>(OffsetY));
+	// Update camera's orientation based on mouse movement
+	PvCamera->processMouseMovement(static_cast<float>(OffsetX), static_cast<float>(OffsetY));
 }
 
 void InputManager::scrollCallback(GLFWwindow* Window, double OffsetX, const double OffsetY) const
 {
-    MCamera.processMouseScroll(static_cast<float>(OffsetY));
+	PvCamera->processMouseScroll(static_cast<float>(OffsetY));
 }
 
-void InputManager::enableRawMouseMotion(GLFWwindow* window)
+void InputManager::enableRawMouseMotion(GLFWwindow* Window)
 {
-    if (glfwRawMouseMotionSupported())
-    {
-        glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-        std::cout << "Raw mouse motion enabled." << std::endl;
-    }
-    else
-    {
-        std::cout << "Raw mouse motion not supported on this system." << std::endl;
-    }
+	if (glfwRawMouseMotionSupported())
+	{
+		glfwSetInputMode(Window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+		std::cout << "Raw mouse motion enabled." << '\n';
+	}
+	else
+	{
+		std::cout << "Raw mouse motion not supported on this system." << '\n';
+	}
 }
